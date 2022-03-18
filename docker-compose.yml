@@ -1,0 +1,29 @@
+version: "3.7"
+services:
+  app:
+    image: integration-service-php-fpm
+    depends_on:
+      - db
+    ports:
+      - ${APP_PORT:-8080}:80
+    volumes:
+      - .:/var/www/html
+      - ./docker/nginx/logs/:/var/log/nginx/
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/php.ini
+
+  db:
+    image: 'mysql/mysql-server'
+    restart: always
+    ports:
+      - ${DB_FORWARD_PORT:-3306}:${DB_PORT}
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_HOST: "%"
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - 'data:/var/lib/mysql'
+
+volumes:
+  data:
