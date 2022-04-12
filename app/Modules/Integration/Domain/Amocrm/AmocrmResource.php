@@ -4,14 +4,12 @@ namespace App\Modules\Integration\Domain\Amocrm;
 
 use AmoCRM\Exceptions\AmoCRMoAuthApiException;
 use App\Modules\Integration\Core\Concerns\ResourceDataType;
+use App\Modules\Integration\Core\Concerns\ResourceRequestOptions;
 use App\Modules\Integration\Core\Facades\Resource;
 use League\Flysystem\Exception;
 
-abstract class AmocrmResource extends Resource
+class AmocrmResource extends Resource
 {
-  public string $endpoint = 'https://advancetest.amocrm.ru/api/v4';
-  public ResourceDataType $dataType = ResourceDataType::JSON;
-
   /**
    * @throws AmoCRMoAuthApiException
    * @throws Exception
@@ -27,23 +25,30 @@ abstract class AmocrmResource extends Resource
     $this->apiClient = new AmocrmAPIClient($subdomain, $clientId, $clientSecret, $authCode, $redirectUri);
   }
 
-  public function fetch(string $url, array $options = [])
+  public function fetch(string $url = '', ResourceRequestOptions $options = null): mixed
   {
-    $endpoint = !$url ?
-      $this->endpoint : (str_starts_with($url, '?') ? $this->endpoint . $url : $this->endpoint . '/' . $url);
+    $secretKey = $this->apiClient::getTokenData(config('services.amocrm.advance.subdomain') . '.' . 'amocrm.ru');;
 
-    $tokenData = $this->apiClient::getTokenData('advancetest.amocrm.ru');
+    return parent::fetch($url, new ResourceRequestOptions(
+      method: $options->getMethod(),
+      headers: collect($options->getHeaders())->merge([
+        'Accept' => 'application/json',
+         "Authorization" => "Bearer " . $secretKey["access_token"],
+      ])->all(),
+      body: $options->getBody(),
+      bodyFormat: $options->getBodyFormat()
+    ));
+  }
 
-    $options = collect([
-      "headers" => [
-        "Authorization" => "Bearer " . $tokenData["access_token"],
-        "Content-Type" => "application/json",
-        "Access-Control-Allow-Origin" => "*",
-      ]
-    ])
-      ->merge($options)
-      ->all();
+  protected function endpoint(): string
+  {
+    $hostname = config('services.amocrm.advance.subdomain');
 
-    return parent::fetch($endpoint, $options);
+    return "https://$hostname.amocrm.ru/api/v4";
+  }
+
+  protected function dataType(): ResourceDataType
+  {
+    return ResourceDataType::JSON;
   }
 }

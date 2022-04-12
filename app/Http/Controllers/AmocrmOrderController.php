@@ -31,9 +31,9 @@ class AmocrmOrderController extends Controller
    */
   public function store(OrderRequest $request, AmocrmOrderService $orderService)
   {
-    $attributes = $request->all();
+    $attributes = $request->validated();
 
-    $orderService->create(
+    return $orderService->create(
       contactFirstName: $attributes['first_name'],
       contactLastName: $attributes['last_name'],
       contactPhone: $attributes['phone'],
@@ -67,7 +67,7 @@ class AmocrmOrderController extends Controller
   /**
    * Update the specified resource in storage.
    *
-   * @param \Illuminate\Http\Request $request
+   * @param Request $request
    * @param int $id
    * @return Response
    */

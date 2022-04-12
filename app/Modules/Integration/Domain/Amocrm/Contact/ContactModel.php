@@ -6,6 +6,7 @@ use AmoCRM\Collections\CustomFieldsValuesCollection;
 use AmoCRM\Exceptions\AmoCRMApiException;
 use AmoCRM\Exceptions\AmoCRMMissedTokenException;
 use AmoCRM\Exceptions\AmoCRMoAuthApiException;
+use AmoCRM\Models\BaseApiModel;
 use AmoCRM\Models\ContactModel as SDKContactModel;
 use App\Modules\Integration\Domain\Amocrm\AmocrmCustomField;
 use App\Modules\Integration\Domain\Amocrm\AmocrmModel;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\App;
 
 class ContactModel extends AmocrmModel
 {
-  public \AmoCRM\Models\BaseApiModel $sdkModel;
+  public BaseApiModel $sdkModel;
 
   public function __construct(SDKContactModel $sdkModel, ContactResource $resource)
   {
@@ -45,9 +46,6 @@ class ContactModel extends AmocrmModel
   /**
    * @param array $attributes
    * @return ContactModel
-   * @throws AmoCRMApiException
-   * @throws AmoCRMMissedTokenException
-   * @throws AmoCRMoAuthApiException
    */
   public static function create(array $attributes): ContactModel
   {
@@ -96,10 +94,15 @@ class ContactModel extends AmocrmModel
    */
   public static function list(?array $select = [], ?array $with = [], ?array $filter = [], ?int $page = null, ?int $limit = null): Collection
   {
-    /**
-     * @var static $model
-     */
-    $response = parent::fetchList($select, $with, $filter, $page, $limit);
+    $filterModified = null;
+
+    if ($filter != []) {
+      $filterModified = self::changeFilterQuery($filter);
+    }
+
+    $response = $filterModified != null ?
+      parent::fetchList($select, $with, $filterModified, $page, $limit) :
+      parent::fetchList($select, $with, $filter, $page, $limit);
 
     $collection = collect();
 
@@ -108,7 +111,7 @@ class ContactModel extends AmocrmModel
         $model = App::make(static::class);
         $model->setAttributes($contact);
         $model->sdkModel = (new SDKContactModel())->setId($contact['id']);
-        $collection->add($model->attributes);
+        $collection->add($model);
       }
     }
 
@@ -163,12 +166,16 @@ class ContactModel extends AmocrmModel
     }, ARRAY_FILTER_USE_KEY);
 
     if ($customUpdatingFields) {
+      foreach ($customUpdatingFields as $field => $value) {
+        $fields[mb_substr($field, 3)] = $value;
+      }
+
       $customFieldsCollection = new CustomFieldsValuesCollection();
 
-      foreach ($customUpdatingFields as $key => $value) {
+      foreach ($fields as $key => $value) {
         if ($value != null) {
           switch ($key) {
-            case 'cf_city':
+            case 'city':
               $keyId = config('services.amocrm.advance.custom_fields.contacts.city');
 
               $customFieldsCollection->add(
@@ -176,7 +183,7 @@ class ContactModel extends AmocrmModel
               );
 
               break;
-            case 'cf_country':
+            case 'country':
               $keyId = config('services.amocrm.advance.custom_fields.contacts.country');
 
               $customFieldsCollection->add(
@@ -184,7 +191,7 @@ class ContactModel extends AmocrmModel
               );
 
               break;
-            case 'cf_position':
+            case 'position':
               $keyId = config('services.amocrm.advance.custom_fields.contacts.position');
 
               $customFieldsCollection->add(
@@ -192,7 +199,7 @@ class ContactModel extends AmocrmModel
               );
 
               break;
-            case 'cf_phone':
+            case 'phone':
               $keyId = config('services.amocrm.advance.custom_fields.contacts.phone');
 
               $values = $this->updateOrCreateCustomPhoneOrEmail($keyId, $value);
@@ -204,7 +211,7 @@ class ContactModel extends AmocrmModel
               }
 
               break;
-            case 'cf_email':
+            case 'email':
               $keyId = config('services.amocrm.advance.custom_fields.contacts.email');
 
               $values = $this->updateOrCreateCustomPhoneOrEmail($keyId, $value);
@@ -216,7 +223,7 @@ class ContactModel extends AmocrmModel
               }
 
               break;
-            case 'cf_partner':
+            case 'partner':
               $keyId = config('services.amocrm.advance.custom_fields.contacts.partner');
 
               $customFieldsCollection->add(
@@ -228,6 +235,83 @@ class ContactModel extends AmocrmModel
       }
       $this->sdkModel->setCustomFieldsValues($customFieldsCollection);
     }
+  }
+
+  public static function changeFilterQuery($filter): array
+  {
+    $filterModified = [];
+
+    foreach ($filter as $key => $value) {
+      switch ($key) {
+        case 'city':
+          $keyId = config('services.amocrm.advance.custom_fields.contacts.city');
+
+          if (is_array($value)) {
+            foreach ($value as $item) {
+              $filterModified['custom_fields'][$keyId][] = $item;
+            }
+          } else
+            $filterModified['custom_fields'][$keyId] = $value;
+
+          break;
+        case 'country':
+          $keyId = config('services.amocrm.advance.custom_fields.contacts.country');
+
+          if (is_array($value)) {
+            foreach ($value as $item) {
+              $filterModified['custom_fields'][$keyId][] = $item;
+            }
+          } else
+            $filterModified['custom_fields'][$keyId] = $value;
+
+          break;
+        case 'position':
+          $keyId = config('services.amocrm.advance.custom_fields.contacts.position');
+
+          if (is_array($value)) {
+            foreach ($value as $item) {
+              $filterModified['custom_fields'][$keyId][] = $item;
+            }
+          } else
+            $filterModified['custom_fields'][$keyId] = $value;
+
+          break;
+        case 'phone':
+          $keyId = config('services.amocrm.advance.custom_fields.contacts.phone');
+
+          if (is_array($value)) {
+            foreach ($value as $item) {
+              $filterModified['custom_fields'][$keyId][] = $item;
+            }
+          } else
+            $filterModified['custom_fields'][$keyId] = $value;
+
+          break;
+        case 'email':
+          $keyId = config('services.amocrm.advance.custom_fields.contacts.email');
+
+          if (is_array($value)) {
+            foreach ($value as $item) {
+              $filterModified['custom_fields'][$keyId][] = $item;
+            }
+          } else
+            $filterModified['custom_fields'][$keyId] = $value;
+
+          break;
+        case 'partner':
+          $keyId = config('services.amocrm.advance.custom_fields.contacts.partner');
+
+          if (is_array($value)) {
+            foreach ($value as $item) {
+              $filterModified['custom_fields'][$keyId][] = $item;
+            }
+          } else
+            $filterModified['custom_fields'][$keyId] = $value;
+
+          break;
+      }
+    }
+    return $filterModified;
   }
 }
 

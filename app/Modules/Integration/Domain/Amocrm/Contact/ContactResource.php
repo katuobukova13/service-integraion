@@ -2,14 +2,18 @@
 
 namespace App\Modules\Integration\Domain\Amocrm\Contact;
 
+use App\Modules\Integration\Core\Concerns\ResourceDataType;
 use App\Modules\Integration\Domain\Amocrm\AmocrmResource;
 
 class ContactResource extends AmocrmResource
 {
-  public function __construct()
+  function endpoint(): string
   {
-    $this->endpoint = $this->endpoint . '/contacts';
+    return self::buildUrl(parent::endpoint(), 'contacts');
+  }
 
-    return parent::__construct();
+  function dataType(): ResourceDataType
+  {
+    return parent::dataType();
   }
 }

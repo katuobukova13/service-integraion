@@ -29,7 +29,6 @@ return [
     'secret' => env('AWS_SECRET_ACCESS_KEY'),
     'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
   ],
-
   'adveduplat' => [
     'domain' => env('ADVEDUPLAT_URL'),
     'api_token' => env('ADVEDUPLAT_ADMIN_API_TOKEN')
@@ -59,6 +58,15 @@ return [
           'integrator' => 974507,
         ]
       ]
+    ],
+  ],
+  'getcourse' => [
+    'advance' => [
+      'hostname' => env('GETCOURSE_HOSTNAME'),
+      'secret_key' => env('GETCOURSE_SECRET_KEY'),
+      'users_export_id' => env('GET_COURSE_USERS_EXPORT_ID'),
+      'deals_export_id' => env('GET_COURSE_DEALS_EXPORT_ID'),
+      'deals_export_cache' => env('GET_COURSE_DEALS_EXPORT_CACHE', false),
     ],
   ],
 ];

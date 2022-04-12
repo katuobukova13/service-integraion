@@ -22,7 +22,7 @@ class AmocrmContactController extends Controller
   #[ArrayShape(['contact' => "\App\Modules\Integration\Domain\Amocrm\Contact\ContactModel"])]
   public function store(ContactRequest $request, AmocrmContactService $contactService): array
   {
-    $attributes = $request->all();
+    $attributes = $request->validated();
 
     return $contactService->create(
       firstName: $attributes['first_name'],
@@ -44,7 +44,7 @@ class AmocrmContactController extends Controller
   #[ArrayShape(['contact' => "\App\Modules\Integration\Domain\Amocrm\Contact\ContactModel"])]
   public function update(ContactRequest $request, AmocrmContactService $contactService, int $id): array
   {
-    $attributes = $request->all();
+    $attributes = $request->validated();
 
     return $contactService->update(
       id: $id,
@@ -60,9 +60,9 @@ class AmocrmContactController extends Controller
   }
 
   /**
-   * @throws AmoCRMoAuthApiException
-   * @throws AmoCRMApiException
-   * @throws AmoCRMMissedTokenException
+   * @param AmocrmContactService $contactService
+   * @param int $id
+   * @return array
    */
 
   #[ArrayShape(['contact' => "\App\Modules\Integration\Domain\Amocrm\Contact\ContactModel"])]
@@ -80,7 +80,7 @@ class AmocrmContactController extends Controller
   #[ArrayShape(['contacts' => "\Illuminate\Support\Collection"])]
   public function index(ContactRequest $request, AmocrmContactService $contactService): array
   {
-    $attributes = $request->request->all();
+    $attributes = $request->validated();
 
     return $contactService->list(
       with: $attributes['with'] ?? [],

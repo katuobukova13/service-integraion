@@ -6,6 +6,8 @@ use AmoCRM\Collections\CustomFieldsValuesCollection;
 use AmoCRM\Exceptions\AmoCRMApiException;
 use AmoCRM\Exceptions\AmoCRMMissedTokenException;
 use AmoCRM\Exceptions\AmoCRMoAuthApiException;
+use AmoCRM\Exceptions\InvalidArgumentException;
+use AmoCRM\Models\BaseApiModel;
 use AmoCRM\Models\LeadModel as SDKLeadModel;
 use App\Modules\Integration\Domain\Amocrm\AmocrmCustomField;
 use App\Modules\Integration\Domain\Amocrm\AmocrmModel;
@@ -15,7 +17,7 @@ use Illuminate\Support\Facades\App;
 
 class LeadModel extends AmocrmModel
 {
-  public \AmoCRM\Models\BaseApiModel $sdkModel;
+  public BaseApiModel $sdkModel;
 
   public function __construct(SDKLeadModel $sdkModel, LeadResource $resource)
   {
@@ -87,12 +89,20 @@ class LeadModel extends AmocrmModel
    * @param array|null $filter
    * @param int|null $page
    * @param int|null $limit
-   * @return LeadModel[]
+   * @return Collection
    * @throws Exception
    */
   public static function list(?array $select = [], ?array $with = [], ?array $filter = [], ?int $page = null, ?int $limit = null): Collection
   {
-    $response = parent::fetchList($select, $with, $filter, $page, $limit);
+    $filterModified = null;
+
+    if ($filter != []) {
+      $filterModified = self::changeFilterQuery($filter);
+    }
+
+    $response = $filterModified != null ?
+      parent::fetchList($select, $with, $filterModified, $page, $limit) :
+      parent::fetchList($select, $with, $filter, $page, $limit);
 
     $collection = collect();
 
@@ -101,7 +111,7 @@ class LeadModel extends AmocrmModel
         $model = App::make(static::class);
         $model->setAttributes($lead);
         $model->sdkModel = (new SDKLeadModel())->setId($lead['id']);
-        $collection->add($model->attributes);
+        $collection->add($model);
       }
     }
 
@@ -134,7 +144,7 @@ class LeadModel extends AmocrmModel
   }
 
   /**
-   * @throws \AmoCRM\Exceptions\InvalidArgumentException
+   * @throws InvalidArgumentException
    */
   public function setCustomFields($attributes)
   {
@@ -143,12 +153,16 @@ class LeadModel extends AmocrmModel
     }, ARRAY_FILTER_USE_KEY);
 
     if ($customUpdatingFields) {
+      foreach ($customUpdatingFields as $field => $value) {
+        $fields[mb_substr($field, 3)] = $value;
+      }
+
       $customFieldsCollection = new CustomFieldsValuesCollection();
 
-      foreach ($customUpdatingFields as $key => $value) {
+      foreach ($fields as $key => $value) {
         if ($value !== null) {
           switch ($key) {
-            case 'cf_city':
+            case 'city':
               $keyId = config('services.amocrm.advance.custom_fields.leads.city');
 
               $customFieldsCollection->add(
@@ -156,7 +170,7 @@ class LeadModel extends AmocrmModel
               );
 
               break;
-            case 'cf_pay_date':
+            case 'pay_date':
               $keyId = config('services.amocrm.advance.custom_fields.leads.pay_date');
 
               $customFieldsCollection->add(
@@ -164,7 +178,7 @@ class LeadModel extends AmocrmModel
               );
 
               break;
-            case 'cf_order':
+            case 'order':
               $keyId = config('services.amocrm.advance.custom_fields.leads.order');
 
               $customFieldsCollection->add(
@@ -172,7 +186,7 @@ class LeadModel extends AmocrmModel
               );
 
               break;
-            case 'cf_integrator':
+            case 'integrator':
               $keyId = config('services.amocrm.advance.custom_fields.leads.integrator');
 
               $customFieldsCollection->add(
@@ -180,7 +194,7 @@ class LeadModel extends AmocrmModel
               );
 
               break;
-            case 'cf_partner':
+            case 'partner':
               $keyId = config('services.amocrm.advance.custom_fields.leads.partner');
 
               $customFieldsCollection->add(
@@ -194,5 +208,69 @@ class LeadModel extends AmocrmModel
 
       $this->sdkModel->setCustomFieldsValues($customFieldsCollection);
     }
+  }
+
+  public static function changeFilterQuery($filter): array
+  {
+    $filterModified = [];
+
+    foreach ($filter as $key => $value) {
+      switch ($key) {
+        case 'city':
+          $keyId = config('services.amocrm.advance.custom_fields.leads.city');
+
+          if (is_array($value)) {
+            foreach ($value as $item) {
+              $filterModified['custom_fields'][$keyId][] = $item;
+            }
+          } else
+            $filterModified['custom_fields'][$keyId] = $value;
+
+          break;
+        case 'pay_date':
+          $keyId = config('services.amocrm.advance.custom_fields.leads.pay_date');
+
+          if ($value != []) {
+            $filterModified['custom_fields'][$keyId]['from'] = strtotime($value['from']);
+            $filterModified['custom_fields'][$keyId]['to'] = strtotime($value['to']);
+          }
+
+          break;
+        case 'order':
+          $keyId = config('services.amocrm.advance.custom_fields.leads.order');
+
+          if (is_array($value)) {
+            foreach ($value as $item) {
+              $filterModified['custom_fields'][$keyId][] = $item;
+            }
+          } else
+            $filterModified['custom_fields'][$keyId] = $value;
+
+          break;
+        case 'integrator':
+          $keyId = config('services.amocrm.advance.custom_fields.leads.integrator');
+
+          if (is_array($value)) {
+            foreach ($value as $item) {
+              $filterModified['custom_fields'][$keyId][] = $item;
+            }
+          } else
+            $filterModified['custom_fields'][$keyId] = $value;
+
+          break;
+        case 'partner':
+          $keyId = config('services.amocrm.advance.custom_fields.leads.partner');
+
+          if (is_array($value)) {
+            foreach ($value as $item) {
+              $filterModified['custom_fields'][$keyId][] = $item;
+            }
+          } else
+            $filterModified['custom_fields'][$keyId] = $value;
+
+          break;
+      }
+    }
+    return $filterModified;
   }
 }

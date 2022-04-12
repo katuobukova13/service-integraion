@@ -2,10 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Http\Requests\ContactRequest;
-use App\Services\Integration\AmocrmContactService;
+use App\Http\Controllers\AmocrmContactController;
 use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Support\Facades\App;
 use Tests\TestCase;
 
 class IntegrationModuleAmocrmContactControllerTest extends TestCase
@@ -19,21 +17,20 @@ class IntegrationModuleAmocrmContactControllerTest extends TestCase
     $contactPhone[] = $this->faker->phoneNumber;
     $contactEmail[] = $this->faker->email;
 
-    $request = ContactRequest::create('/api/amocrm/contacts', 'POST',
-      App::make(AmocrmContactService::class)->create(
-        firstName: $contactFirstName,
-        lastName: $contactLastName,
-        phone: $contactPhone,
-        email: $contactEmail
-      ));
+    $response = $this->post('/api/amocrm/contacts', [
+      'first_name' => $contactFirstName,
+      'last_name' => $contactLastName,
+      'phone' => $contactPhone,
+      'email' => $contactEmail
+    ]);
 
-    $this->assertEquals($request->request->all()['contact']['first_name'], $contactFirstName);
-    $this->assertEquals($request->request->all()['contact']['last_name'], $contactLastName);
-    $this->assertEquals($request->request->all()['contact']['name'], $contactFirstName . ' ' . $contactLastName);
-    $this->assertEquals($request->request->all()['contact']["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.contacts.email'));
-    $this->assertContains($contactEmail[0], $request->request->all()['contact']["custom_fields_values"][0]['values'][0]);
-    $this->assertEquals($request->request->all()['contact']["custom_fields_values"][1]['field_id'], config('services.amocrm.advance.custom_fields.contacts.phone'));
-    $this->assertContains($contactPhone[0], $request->request->all()['contact']["custom_fields_values"][1]['values'][0]);
+    $this->assertEquals($response['first_name'], $contactFirstName);
+    $this->assertEquals($response['last_name'], $contactLastName);
+    $this->assertEquals($response['name'], $contactFirstName . ' ' . $contactLastName);
+    $this->assertEquals($response["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.contacts.email'));
+    $this->assertContains($contactEmail[0], $response["custom_fields_values"][0]['values'][0]);
+    $this->assertEquals($response["custom_fields_values"][1]['field_id'], config('services.amocrm.advance.custom_fields.contacts.phone'));
+    $this->assertContains($contactPhone[0], $response["custom_fields_values"][1]['values'][0]);
   }
 
   public function testShow(): void
@@ -43,17 +40,18 @@ class IntegrationModuleAmocrmContactControllerTest extends TestCase
     $contactPhone[] = $this->faker->phoneNumber;
     $contactEmail[] = $this->faker->email;
 
-    $request = ContactRequest::create('/api/amocrm/contacts', 'POST', App::make(AmocrmContactService::class)->create(
-      firstName: $contactFirstName,
-      lastName: $contactLastName,
-      phone: $contactPhone,
-      email: $contactEmail
-    ));
+    $responsePost = $this->post('/api/amocrm/contacts', [
+      'first_name' => $contactFirstName,
+      'last_name' => $contactLastName,
+      'phone' => $contactPhone,
+      'email' => $contactEmail
+    ]);
 
-    $contact = ContactRequest::create('/api/amocrm/contacts', 'GET',
-      App::make(AmocrmContactService::class)->find($request->request->all()['contact']['id']));
+    $id = $responsePost['id'];
 
-    $this->assertEquals($contact->query->all()['contact']['id'], $request->request->all()['contact']['id']);
+    $response = $this->get('/api/amocrm/contacts/' . $id);
+
+    $this->assertEquals($id, $response['id']);
   }
 
   public function testUpdate(): void
@@ -65,84 +63,87 @@ class IntegrationModuleAmocrmContactControllerTest extends TestCase
 
     $contactLastNameUpdate = $this->faker->lastName;
 
-    $request = ContactRequest::create('/api/amocrm/contacts', 'POST',
-      App::make(AmocrmContactService::class)->create(
-        firstName: $contactFirstName,
-        lastName: $contactLastName,
-        phone: $contactPhone,
-        email: $contactEmail
-      ));
+    $responsePost = $this->post('/api/amocrm/contacts', [
+      'first_name' => $contactFirstName,
+      'last_name' => $contactLastName,
+      'phone' => $contactPhone,
+      'email' => $contactEmail
+    ]);
 
-    $contactUpdated = ContactRequest::create('/api/amocrm/contacts', 'PUT',
-      App::make(AmocrmContactService::class)->update(
-        id: $request->request->all()['contact']['id'],
-        lastName: $contactLastNameUpdate,
-      ));
+    $id = $responsePost['id'];
 
-    $this->assertEquals($contactUpdated->request->all()['contact']['id'], $request->request->all()['contact']['id']);
-    $this->assertEquals($contactLastNameUpdate, $contactUpdated['contact']['last_name']);
+    $responseUpdate = $this->put('/api/amocrm/contacts/' . $id, [
+      'last_name' => $contactLastNameUpdate,
+    ]);
+
+    $this->assertEquals($responseUpdate['id'], $responsePost['id']);
+    $this->assertEquals($contactLastNameUpdate, $responseUpdate['last_name']);
   }
 
-  public function testList(): void
+  public function testListFilter(): void
   {
-    $contactFirstName1 = $this->faker->firstName;
-    $contactFirstName2 = $this->faker->firstName;
-    $contactFirstName3 = $this->faker->firstName;
+    $contactFirstName = $this->faker->firstName;
     $contactLastName = $this->faker->lastName;
-    $contactPhone[] = $this->faker->phoneNumber;
-    $contactEmail[] = $this->faker->email;
+    $contactPhone1[] = $this->faker->phoneNumber;
+    $contactEmail1[] = $this->faker->email;
+    $contactPhone2[] = $this->faker->phoneNumber;
+    $contactEmail2[] = $this->faker->email;
 
-    $contact1 = ContactRequest::create('/api/amocrm/contacts', 'POST',
-      App::make(AmocrmContactService::class)->create(
-        firstName: $contactFirstName1,
-        lastName: $contactLastName,
-        phone: $contactPhone,
-        email: $contactEmail
-      ));
+    $contact1 = $this->post(action(
+      [AmocrmContactController::class, 'store'],
+      [
+        'first_name' => $contactFirstName,
+        'last_name' => $contactLastName,
+        'phone' => $contactPhone1,
+        'email' => $contactEmail1
+      ]));
 
-    $contact2 = ContactRequest::create('/api/amocrm/contacts', 'POST',
-      App::make(AmocrmContactService::class)->create(
-        firstName: $contactFirstName2,
-        lastName: $contactLastName,
-        phone: $contactPhone,
-        email: $contactEmail
-      ));
+    $contact2 = $this->post(action(
+      [AmocrmContactController::class, 'store'],
+      [
+        'first_name' => $contactFirstName,
+        'last_name' => $contactLastName,
+        'phone' => $contactPhone2,
+        'email' => $contactEmail2
+      ]));
 
-    $contact3 = ContactRequest::create('/api/amocrm/contacts', 'POST',
-      App::make(AmocrmContactService::class)->create(
-        firstName: $contactFirstName3,
-        lastName: $contactLastName,
-        phone: $contactPhone,
-        email: $contactEmail
-      ));
+    $listFilter = $this->get(action(
+      [AmocrmContactController::class, 'index'],
+      ['filter' => ['email' => [
+        $contact1['custom_fields_values'][0]['values'][0]['value'],
+        $contact2['custom_fields_values'][0]['values'][0]['value']]]]));
 
-    $listFilter = ContactRequest::create('/api/amocrm/contacts', 'GET',
-      App::make(AmocrmContactService::class)->list(
-        filter: ['id' => [
-          $contact1->request->all()['contact']['id'],
-          $contact2->request->all()['contact']['id'],
-          $contact3->request->all()['contact']['id']]]));
+    $this->assertCount(2, $listFilter['contacts']);
+    $this->assertContains($contact1['custom_fields_values'][0]['values'][0]['value'],
+      $listFilter['contacts'][0]['attributes']['custom_fields_values'][0]['values'][0]);
+    $this->assertContains($contact2['custom_fields_values'][0]['values'][0]['value'],
+      $listFilter['contacts'][1]['attributes']['custom_fields_values'][0]['values'][0]);
+  }
 
-    $this->assertInstanceOf('App\Http\Requests\ContactRequest', $listFilter);
-    $this->assertEquals(3, $listFilter->query->all()['contacts']->count());
-    $this->assertTrue($listFilter->query->all()['contacts']->contains('id', $contact1->request->all()['contact']['id']));
-    $this->assertTrue($listFilter->query->all()['contacts']->contains('id', $contact2->request->all()['contact']['id']));
-    $this->assertTrue($listFilter->query->all()['contacts']->contains('id', $contact3->request->all()['contact']['id']));
+  public function testListLimit()
+  {
+    $listLimit = $this->get(action(
+      [AmocrmContactController::class, 'index'],
+      ['limit' => 2]));
 
-    $listLimit = ContactRequest::create('/api/amocrm/contacts', 'GET',
-      App::make(AmocrmContactService::class)->list(limit: 5));
+    $this->assertCount(2, $listLimit['contacts']);
+  }
 
-    $this->assertInstanceOf('App\Http\Requests\ContactRequest', $listLimit);
-    $this->assertEquals(5, $listLimit->query->all()['contacts']->count());
+  public function testListPage()
+  {
+    $listPage = $this->get(action(
+      [AmocrmContactController::class, 'index'],
+      ['page' => 1]));
 
-    $listPage = ContactRequest::create('/api/amocrm/contacts', 'GET',
-      App::make(AmocrmContactService::class)->list(page: 1));
+    $this->assertIsArray($listPage['contacts']);
+  }
 
-    $this->assertInstanceOf('App\Http\Requests\ContactRequest', $listPage);
+  public function testListWith()
+  {
+    $listWith = $this->get(action(
+      [AmocrmContactController::class, 'index'],
+      ['with' => 'leads']));
 
-    $listWith = ContactRequest::create('/api/amocrm/contacts', 'GET',
-      App::make(AmocrmContactService::class)->list(with: ['leads']));
-
-    $this->assertInstanceOf('App\Http\Requests\ContactRequest', $listWith);
+    $this->assertIsArray($listWith['contacts']);
   }
 }

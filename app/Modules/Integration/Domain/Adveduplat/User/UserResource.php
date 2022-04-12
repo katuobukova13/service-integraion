@@ -7,15 +7,13 @@ use App\Modules\Integration\Domain\Adveduplat\AdveduplatResource as SyncResource
 
 class UserResource extends SyncResource
 {
-  public ResourceDataType $dataType = ResourceDataType::JSON;
-
   function __construct()
   {
     parent::__construct();
     $this->endpoint = $this->endpoint . '/api/admin/users';
   }
 
-  public function fetch(string $url, array $options = []): string|array
+  public function fetch(string $url, array $options = []): mixed
   {
     $options = collect([
       "headers" => [

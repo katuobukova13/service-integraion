@@ -11,7 +11,7 @@ class AdveduplatResource extends Resource
     $this->endpoint = config('services.adveduplat.domain');
   }
 
-  public function fetch(string $url, array $options = []): string|array
+  public function fetch(string $url, array $options = []): mixed
   {
     $endpoint = $url ? $this->endpoint . '/' . $url : $this->endpoint;
 

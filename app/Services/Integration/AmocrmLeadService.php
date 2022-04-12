@@ -22,7 +22,6 @@ class AmocrmLeadService
    * @param int|null $responsibleUserId
    * @return array
    */
-  #[ArrayShape(['lead' => "array"])]
   public function create(
     string $title,
     int  $price,
@@ -45,19 +44,18 @@ class AmocrmLeadService
       'cf_integrator' => $integrator,
     ]);
 
-    return ['lead' => $lead->attributes];
+    return $lead->attributes;
   }
 
   /**
    * @param int $id
    * @return array
    */
-  #[ArrayShape(['lead' => "array"])]
   public function find(int $id): array
   {
-    $lead = AmocrmLead::find($id)->attributes;
+    $lead = AmocrmLead::find($id);
 
-    return ['lead' => $lead];
+    return $lead->attributes;
   }
 
   /**
@@ -66,7 +64,6 @@ class AmocrmLeadService
    * @throws AmoCRMMissedTokenException
    */
 
-  #[ArrayShape(['lead' => "array"])]
   public function update(
     int    $id,
     string $title = null,
@@ -94,14 +91,14 @@ class AmocrmLeadService
 
     $leadUpdated = AmocrmLead::find($lead->attributes['id']);
 
-    return ['lead' => $leadUpdated->attributes];
+    return $leadUpdated->attributes;
   }
 
   /**
    * @throws Exception
    */
 
-  #[ArrayShape(['leads' => "\App\Modules\Integration\Domain\Amocrm\Lead\LeadModel[]|\Illuminate\Support\Collection"])]
+  #[ArrayShape(['leads' => "\Illuminate\Support\Collection"])]
   public function list(
     array $with = [],
     array $filter = [],

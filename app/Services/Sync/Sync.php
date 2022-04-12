@@ -2,8 +2,6 @@
 
 namespace App\Services\Sync;
 
-use Mockery\Matcher\Closure;
-
 enum SyncDirection
 {
   case TailToHead;

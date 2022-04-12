@@ -10,7 +10,7 @@ use \AmoCRM\Client\AmoCRMApiClient as AmoCRMApiClientSDK;
 
 class AmocrmAPIClient
 {
-  private static string $tokenDir = "services/amocrm/";
+ private static string $tokenDir = "services/amocrm/";
 
   /**
    * @throws AmoCRMoAuthApiException

@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Services\Integration\AmocrmContactService;
 use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Support\Facades\App;
 use Tests\TestCase;
 
 class IntegrationModuleAmocrmContactServiceTest extends TestCase
@@ -18,7 +17,7 @@ class IntegrationModuleAmocrmContactServiceTest extends TestCase
     $contactPhone[] = $this->faker->phoneNumber;
     $contactEmail[] = $this->faker->email;
 
-    $amocrmContactService = App::make(AmocrmContactService::class);
+    $amocrmContactService = $this->app->make(AmocrmContactService::class);
 
     $contact = $amocrmContactService->create(
       firstName: $contactFirstName,
@@ -28,13 +27,13 @@ class IntegrationModuleAmocrmContactServiceTest extends TestCase
     );
 
     $this->assertIsArray($contact);
-    $this->assertEquals($contact['contact']['first_name'], $contactFirstName);
-    $this->assertEquals($contact['contact']['last_name'], $contactLastName);
-    $this->assertEquals($contact['contact']['name'], $contactFirstName . ' ' . $contactLastName);
-    $this->assertEquals($contact['contact']["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.contacts.email'));
-    $this->assertContains($contactEmail[0], $contact['contact']["custom_fields_values"][0]['values'][0]);
-    $this->assertEquals($contact['contact']["custom_fields_values"][1]['field_id'], config('services.amocrm.advance.custom_fields.contacts.phone'));
-    $this->assertContains($contactPhone[0], $contact['contact']["custom_fields_values"][1]['values'][0]);
+    $this->assertEquals($contact['first_name'], $contactFirstName);
+    $this->assertEquals($contact['last_name'], $contactLastName);
+    $this->assertEquals($contact['name'], $contactFirstName . ' ' . $contactLastName);
+    $this->assertEquals($contact["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.contacts.email'));
+    $this->assertContains($contactEmail[0], $contact["custom_fields_values"][0]['values'][0]);
+    $this->assertEquals($contact["custom_fields_values"][1]['field_id'], config('services.amocrm.advance.custom_fields.contacts.phone'));
+    $this->assertContains($contactPhone[0], $contact["custom_fields_values"][1]['values'][0]);
   }
 
   public function testFind(): void
@@ -44,7 +43,7 @@ class IntegrationModuleAmocrmContactServiceTest extends TestCase
     $contactPhone[] = $this->faker->phoneNumber;
     $contactEmail[] = $this->faker->email;
 
-    $amocrmContactService = App::make(AmocrmContactService::class);
+    $amocrmContactService = $this->app->make(AmocrmContactService::class);
 
     $order = $amocrmContactService->create(
       firstName: $contactFirstName,
@@ -53,10 +52,10 @@ class IntegrationModuleAmocrmContactServiceTest extends TestCase
       email: $contactEmail,
     );
 
-    $contact = $amocrmContactService->find($order['contact']['id']);
+    $contact = $amocrmContactService->find($order['id']);
 
     $this->assertIsArray($contact);
-    $this->assertEquals($order['contact']['id'], $contact['contact']['id']);
+    $this->assertEquals($order['id'], $contact['id']);
   }
 
   public function testUpdate(): void
@@ -68,7 +67,7 @@ class IntegrationModuleAmocrmContactServiceTest extends TestCase
     $firstNameUpdate = $this->faker->firstName;
     $phonesUpdate[] = $this->faker->phoneNumber;
 
-    $amocrmContactService = App::make(AmocrmContactService::class);
+    $amocrmContactService = $this->app->make(AmocrmContactService::class);
 
     $contact = $amocrmContactService->create(
       firstName: $contactFirstName,
@@ -77,7 +76,7 @@ class IntegrationModuleAmocrmContactServiceTest extends TestCase
       email: $contactEmail,
     );
 
-    $contactId = $contact['contact']['id'];
+    $contactId = $contact['id'];
 
     $contactUpdated = $amocrmContactService->update(
       id: $contactId,
@@ -86,15 +85,15 @@ class IntegrationModuleAmocrmContactServiceTest extends TestCase
     );
 
     $this->assertIsArray($contactUpdated);
-    $this->assertEquals($firstNameUpdate, $contactUpdated['contact']['first_name']);
-    $this->assertEquals($contactUpdated['contact']["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.contacts.email'));
-    $this->assertContains($contactEmail[0], $contactUpdated['contact']["custom_fields_values"][0]['values'][0]);
-    $this->assertEquals($contactUpdated['contact']["custom_fields_values"][1]['field_id'], config('services.amocrm.advance.custom_fields.contacts.phone'));
-    $this->assertContains($phonesUpdate[0], $contactUpdated['contact']["custom_fields_values"][1]['values'][0]);
-    $this->assertContains($contactPhone[0], $contactUpdated['contact']["custom_fields_values"][1]['values'][1]);
+    $this->assertEquals($firstNameUpdate, $contactUpdated['first_name']);
+    $this->assertEquals($contactUpdated["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.contacts.email'));
+    $this->assertContains($contactEmail[0], $contactUpdated["custom_fields_values"][0]['values'][0]);
+    $this->assertEquals($contactUpdated["custom_fields_values"][1]['field_id'], config('services.amocrm.advance.custom_fields.contacts.phone'));
+    $this->assertContains($phonesUpdate[0], $contactUpdated["custom_fields_values"][1]['values'][0]);
+    $this->assertContains($contactPhone[0], $contactUpdated["custom_fields_values"][1]['values'][1]);
   }
 
-  public function testListContacts(): void
+  public function testListFilterContacts(): void
   {
     $firstName = $this->faker->firstName;
     $lastName = $this->faker->lastName;
@@ -102,10 +101,8 @@ class IntegrationModuleAmocrmContactServiceTest extends TestCase
     $email1[] = $this->faker->email;
     $phones2[] = $this->faker->phoneNumber;
     $email2[] = $this->faker->email;
-    $phones3[] = $this->faker->phoneNumber;
-    $email3[] = $this->faker->email;
 
-    $amocrmContactService = App::make(AmocrmContactService::class);
+    $amocrmContactService = $this->app->make(AmocrmContactService::class);
 
     $contact1 = $amocrmContactService->create(
       firstName: $firstName,
@@ -121,21 +118,18 @@ class IntegrationModuleAmocrmContactServiceTest extends TestCase
       email: $email2,
     );
 
-    $contact3 = $amocrmContactService->create(
-      firstName: $firstName,
-      lastName: $lastName,
-      phone: $phones3,
-      email: $email3,
-    );
-
     $listFilter = $amocrmContactService->list(filter: ['id' => [
-      $contact1['contact']['id'], $contact2['contact']['id']]]);
+      $contact1['id'], $contact2['id']]]);
 
     $this->assertIsArray($listFilter);
     $this->assertEquals(2, $listFilter['contacts']->count());
-    $this->assertTrue($listFilter['contacts']->contains('id', $contact1['contact']['id']));
-    $this->assertTrue($listFilter['contacts']->contains('id', $contact2['contact']['id']));
-    $this->assertFalse($listFilter['contacts']->contains('id', $contact3['contact']['id']));
+    $this->assertEquals($listFilter['contacts'][0]->attributes['id'], $contact1['id']);
+    $this->assertEquals($listFilter['contacts'][1]->attributes['id'], $contact2['id']);
+  }
+
+  public function testListLimitContacts()
+  {
+    $amocrmContactService = $this->app->make(AmocrmContactService::class);
 
     $listLimit = $amocrmContactService->list(limit: 5);
 
@@ -144,6 +138,25 @@ class IntegrationModuleAmocrmContactServiceTest extends TestCase
 
     $listPage = $amocrmContactService->list(page: 1);
     $this->assertIsArray($listPage);
+
+    $listWith = $amocrmContactService->list(with: ['leads']);
+    $this->assertIsArray($listWith);
+  }
+
+  public function testListPageContacts()
+  {
+    $amocrmContactService = $this->app->make(AmocrmContactService::class);
+
+    $listPage = $amocrmContactService->list(page: 1);
+    $this->assertIsArray($listPage);
+
+    $listWith = $amocrmContactService->list(with: ['leads']);
+    $this->assertIsArray($listWith);
+  }
+
+  public function testListWithContacts()
+  {
+    $amocrmContactService = $this->app->make(AmocrmContactService::class);
 
     $listWith = $amocrmContactService->list(with: ['leads']);
     $this->assertIsArray($listWith);

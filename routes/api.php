@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AmocrmContactController;
+use App\Http\Controllers\AmocrmLeadController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,15 +18,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/amocrm/order', 'App\Http\Controllers\AmocrmOrderController@store');
 
-Route::get('/amocrm/contacts', 'App\Http\Controllers\AmocrmContactController@index');
-Route::get('/amocrm/contacts/{contact}', 'App\Http\Controllers\AmocrmContactController@show');
-Route::post('/amocrm/contacts', 'App\Http\Controllers\AmocrmContactController@store');
-Route::put('/amocrm/contacts/{contact}', 'App\Http\Controllers\AmocrmContactController@update');
-
-Route::get('/amocrm/leads', 'App\Http\Controllers\AmocrmLeadController@index');
-Route::get('/amocrm/leads/{lead}', 'App\Http\Controllers\AmocrmLeadController@show');
-Route::post('/amocrm/leads', 'App\Http\Controllers\AmocrmLeadController@store');
-Route::put('/amocrm/leads/{lead}', 'App\Http\Controllers\AmocrmLeadController@update');
+Route::apiResource('/amocrm/contacts', AmocrmContactController::class);
+Route::apiResource('/amocrm/leads', AmocrmLeadController::class);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
   return $request->user();

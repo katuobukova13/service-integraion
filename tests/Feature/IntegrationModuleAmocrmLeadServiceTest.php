@@ -26,10 +26,10 @@ class IntegrationModuleAmocrmLeadServiceTest extends TestCase
     );
 
     $this->assertIsArray($lead);
-    $this->assertEquals($lead['lead']['name'], $title);
-    $this->assertEquals($price, $lead['lead']['price']);
-    $this->assertEquals($lead['lead']["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.leads.pay_date'));
-    $this->assertEquals($payDate, $lead['lead']["custom_fields_values"][0]['values'][0]['value']->format('d.m.Y'));
+    $this->assertEquals($lead['name'], $title);
+    $this->assertEquals($price, $lead['price']);
+    $this->assertEquals($lead["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.leads.pay_date'));
+    $this->assertEquals($payDate, $lead["custom_fields_values"][0]['values'][0]['value']->format('d.m.Y'));
   }
 
   public function testFind(): void
@@ -46,10 +46,10 @@ class IntegrationModuleAmocrmLeadServiceTest extends TestCase
       price: $price
     );
 
-    $lead = $amocrmLeadService->find($test['lead']['id']);
+    $lead = $amocrmLeadService->find($test['id']);
 
     $this->assertIsArray($lead);
-    $this->assertEquals($test['lead']['id'], $lead['lead']['id']);
+    $this->assertEquals($test['id'], $lead['id']);
   }
 
   public function testUpdate(): void
@@ -67,7 +67,7 @@ class IntegrationModuleAmocrmLeadServiceTest extends TestCase
       price: $price
     );
 
-    $leadId = $test['lead']['id'];
+    $leadId = $test['id'];
 
     $leadUpdated = $amocrmLeadService->update(
       id: $leadId,
@@ -75,20 +75,18 @@ class IntegrationModuleAmocrmLeadServiceTest extends TestCase
     );
 
     $this->assertIsArray($leadUpdated);
-    $this->assertEquals($priceNew, $leadUpdated['lead']['price']);
+    $this->assertEquals($priceNew, $leadUpdated['price']);
   }
 
-  public function testList(): void
+  public function testListFilter(): void
   {
     $title = $this->faker->text(30);
     $price1 = $this->faker->numberBetween(100, 1000);
     $payDate1 = $this->faker->date(format: 'd.m.Y');
     $price2 = $this->faker->numberBetween(100, 1000);
     $payDate2 = $this->faker->date(format: 'd.m.Y');
-    $price3 = $this->faker->numberBetween(100, 1000);
-    $payDate3 = $this->faker->date(format: 'd.m.Y');
 
-    $amocrmLeadService = App::make(AmocrmLeadService::class);
+    $amocrmLeadService = $this->app->make(AmocrmLeadService::class);
 
     $lead1 = $amocrmLeadService->create(
       title: $title,
@@ -102,28 +100,36 @@ class IntegrationModuleAmocrmLeadServiceTest extends TestCase
       price: $price2
     );
 
-    $lead3 = $amocrmLeadService->create(
-      title: $title,
-      payDate: $payDate3,
-      price: $price3
-    );
-
     $listFilter = $amocrmLeadService->list(filter: ['id' => [
-      $lead1['lead']['id'], $lead2['lead']['id']]]);
+      $lead1['id'], $lead2['id']]]);
 
     $this->assertIsArray($listFilter);
     $this->assertEquals(2, $listFilter['leads']->count());
-    $this->assertTrue($listFilter['leads']->contains('id', $lead1['lead']['id']));
-    $this->assertTrue($listFilter['leads']->contains('id', $lead2['lead']['id']));
-    $this->assertFalse($listFilter['leads']->contains('id', $lead3['lead']['id']));
+    $this->assertEquals($lead1['id'], $listFilter['leads'][0]->attributes['id']);
+    $this->assertEquals($lead2['id'], $listFilter['leads'][1]->attributes['id']);
+  }
+
+  public function testListLimit()
+  {
+    $amocrmLeadService = $this->app->make(AmocrmLeadService::class);
 
     $listLimit = $amocrmLeadService->list(limit: 5);
 
     $this->assertIsArray($listLimit);
     $this->assertEquals(5, $listLimit['leads']->count());
+  }
+
+  public function testListPage()
+  {
+    $amocrmLeadService = $this->app->make(AmocrmLeadService::class);
 
     $listPage = $amocrmLeadService->list(page: 1);
     $this->assertIsArray($listPage);
+  }
+
+  public function testListWith()
+  {
+    $amocrmLeadService = $this->app->make(AmocrmLeadService::class);
 
     $listWith = $amocrmLeadService->list(with: ['leads']);
     $this->assertIsArray($listWith);

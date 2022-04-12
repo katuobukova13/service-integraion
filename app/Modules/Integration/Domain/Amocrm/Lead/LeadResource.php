@@ -2,13 +2,18 @@
 
 namespace App\Modules\Integration\Domain\Amocrm\Lead;
 
+use App\Modules\Integration\Core\Concerns\ResourceDataType;
 use App\Modules\Integration\Domain\Amocrm\AmocrmResource;
 
 class LeadResource extends AmocrmResource
 {
-  public function __construct()
+  function endpoint(): string
   {
-    $this->endpoint = $this->endpoint . '/leads';
-    return parent::__construct();
+    return self::buildUrl(parent::endpoint(), 'leads');
+  }
+
+  function dataType(): ResourceDataType
+  {
+    return parent::dataType();
   }
 }

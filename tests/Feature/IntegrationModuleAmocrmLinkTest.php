@@ -35,7 +35,7 @@ class IntegrationModuleAmocrmLinkTest extends TestCase
 
     $link = LinkModel::link($amoContact, $amoLead);
 
-    $this->assertInstanceOf('App\Modules\Integration\Domain\Amocrm\Link\LinkModel', $link);
+    $this->assertInstanceOf(LinkModel::class, $link);
     $this->assertEquals("leads", $link->attributes[0]["to_entity_type"]);
     $this->assertEquals($link->attributes[0]["to_entity_id"], $amoLead->attributes['id']);
   }
@@ -59,7 +59,7 @@ class IntegrationModuleAmocrmLinkTest extends TestCase
 
     $link = LinkModel::link($amoLead, $amoContact);
 
-    $this->assertInstanceOf('App\Modules\Integration\Domain\Amocrm\Link\LinkModel', $link);
+    $this->assertInstanceOf(LinkModel::class, $link);
     $this->assertEquals("contacts", $link->attributes[0]["to_entity_type"]);
     $this->assertEquals($link->attributes[0]["to_entity_id"], $amoContact->attributes['id']);
   }

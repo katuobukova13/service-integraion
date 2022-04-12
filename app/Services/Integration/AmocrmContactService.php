@@ -20,13 +20,9 @@ class AmocrmContactService
    * @param string|null $country
    * @param string|null $position
    * @param string|null $partner
+   * @param int|null $responsibleUserId
    * @return array
-   * @throws AmoCRMApiException
-   * @throws AmoCRMMissedTokenException
-   * @throws AmoCRMoAuthApiException
    */
-
-  #[ArrayShape(['contact' => "array"])]
   public function create(
     string $firstName,
     string $lastName,
@@ -52,18 +48,17 @@ class AmocrmContactService
       'cf_partner' => $partner,
     ]);
 
-    return ['contact' => $contact->attributes];
+    return $contact->attributes;
   }
 
   /**
    * @param int $id
    * @return array
    */
-  #[ArrayShape(['contact' => "array"])]
   public function find(int $id): array
   {
     $contact = AmocrmContact::find($id);
-    return ['contact' => $contact->attributes];
+    return $contact->attributes;
   }
 
   /**
@@ -71,8 +66,6 @@ class AmocrmContactService
    * @throws AmoCRMoAuthApiException
    * @throws AmoCRMMissedTokenException
    */
-
-  #[ArrayShape(['contact' => "array"])]
   public function update(
     int    $id,
     string $firstName = null,
@@ -103,7 +96,7 @@ class AmocrmContactService
 
     $contactUpdated = AmocrmContact::find($contact->attributes['id']);
 
-    return ['contact' => $contactUpdated->attributes];
+    return $contactUpdated->attributes;
   }
 
   /**

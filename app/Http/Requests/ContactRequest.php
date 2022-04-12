@@ -25,7 +25,6 @@ class ContactRequest extends FormRequest
     {
       return [
         //contacts
-        'id' => 'int',
         'name' => 'string',
         'last_name' => 'string',
         'first_name' => 'string',
@@ -41,15 +40,15 @@ class ContactRequest extends FormRequest
         'page' => 'int|nullable',
         'limit' => 'int|nullable',
         'with.leads' => 'array|[]',
-        'filter.id' => 'integer|nullable',
-        'filter.name' => 'string|nullable',
+        'filter.id' => 'array|nullable',
+        'filter.name' => 'array|nullable',
         'filter.email' => 'array|nullable',
         'filter.phone' => 'array|nullable',
-        'filter.city' => 'string|nullable',
-        'filter.country' => 'string|nullable',
-        'filter.position' => 'string|nullable',
-        'filter.partner' => 'string|nullable',
-        'filter.responsible_user_id' => 'string|nullable',
+        'filter.city' => 'array|nullable',
+        'filter.country' => 'array|nullable',
+        'filter.position' => 'array|nullable',
+        'filter.partner' => 'array|nullable',
+        'filter.responsible_user_id' => 'array|nullable',
       ];
     }
 }

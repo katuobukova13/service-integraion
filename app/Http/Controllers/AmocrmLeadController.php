@@ -13,15 +13,15 @@ use JetBrains\PhpStorm\ArrayShape;
 class AmocrmLeadController extends Controller
 {
   /**
-   * @throws AmoCRMApiException
-   * @throws AmoCRMoAuthApiException
-   * @throws AmoCRMMissedTokenException
+   * @param LeadRequest $request
+   * @param AmocrmLeadService $leadService
+   * @return array
    */
 
   #[ArrayShape(['lead' => "\App\Modules\Integration\Domain\Amocrm\Lead\LeadModel"])]
   public function store(LeadRequest $request, AmocrmLeadService $leadService): array
   {
-    $attributes = $request->all();
+    $attributes = $request->validated();
 
     return $leadService->create(
       title: $attributes['title'],
@@ -43,7 +43,7 @@ class AmocrmLeadController extends Controller
   #[ArrayShape(['lead' => "\App\Modules\Integration\Domain\Amocrm\Lead\LeadModel"])]
   public function update(LeadRequest $request, AmocrmLeadService $leadService, int $id): array
   {
-    $attributes = $request->all();
+    $attributes = $request->validated();
 
     return $leadService->update(
       id: $id,
@@ -76,7 +76,7 @@ class AmocrmLeadController extends Controller
   #[ArrayShape(['leads' => "\App\Modules\Integration\Domain\Amocrm\Lead\LeadModel[]|\Illuminate\Support\Collection"])]
   public function index(LeadRequest $request, AmocrmLeadService $leadService): array
   {
-    $attributes = $request->request->all();
+    $attributes = $request->validated();
 
     return $leadService->list(
       with: $attributes['with'] ?? [],

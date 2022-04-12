@@ -8,6 +8,7 @@ use AmoCRM\Exceptions\AmoCRMoAuthApiException;
 use App\Modules\Integration\Domain\Amocrm\Lead\LeadModel;
 use Exception;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 class IntegrationModuleAmocrmLeadModelTest extends TestCase
@@ -64,7 +65,7 @@ class IntegrationModuleAmocrmLeadModelTest extends TestCase
 
     $lead = LeadModel::find($model->attributes['id']);
 
-    $this->assertInstanceOf('App\Modules\Integration\Domain\Amocrm\Lead\LeadModel', $lead);
+    $this->assertInstanceOf(LeadModel::class, $lead);
     $this->assertEquals($titleUpdate, $lead->attributes['name']);
     $this->assertEquals($lead->attributes["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.leads.pay_date'));
     $this->assertEquals($payDateUpdate, $lead->attributes["custom_fields_values"][0]['values'][0]['value']->timezone('Europe/Moscow')->format('d.m.Y'));
@@ -78,29 +79,43 @@ class IntegrationModuleAmocrmLeadModelTest extends TestCase
     $title = $this->faker->text(10);
     $price1 = $this->faker->numberBetween(1500, 6000);
     $price2 = $this->faker->numberBetween(1000, 4000);
-    $price3 = $this->faker->numberBetween(500, 600);
 
     $model1 = LeadModel::create(["name" => $title, "price" => $price1]);
     $model2 = LeadModel::create(["name" => $title, "price" => $price2]);
-    $model3 = LeadModel::create(["name" => $title, "price" => $price3]);
 
     $listFilter = LeadModel::list(filter: ['id' => [$model1->attributes['id'], $model2->attributes['id']]]);
 
-    $this->assertInstanceOf('Illuminate\Support\Collection', $listFilter);
-    $this->assertTrue($listFilter->count() == 2);
-    $this->assertTrue($listFilter->contains('id', $model1->attributes['id']));
-    $this->assertTrue($listFilter->contains('id', $model2->attributes['id']));
-    $this->assertFalse($listFilter->contains('id', $model3->attributes['id']));
+    $this->assertInstanceOf(Collection::class, $listFilter);
+    $this->assertEquals($listFilter[0]->attributes['id'], $model1->attributes['id']);
+    $this->assertEquals($listFilter[1]->attributes['id'], $model2->attributes['id']);
+  }
 
-    $listLimit = LeadModel::list(limit: 5);
+  /**
+   * @throws Exception
+   */
+  public function testListLimit()
+  {
+    $listLimit = LeadModel::list(limit: 2);
 
-    $this->assertInstanceOf('Illuminate\Support\Collection', $listLimit);
-    $this->assertEquals(5, $listLimit->count());
+    $this->assertInstanceOf(Collection::class, $listLimit);
+    $this->assertEquals(2, $listLimit->count());
+  }
 
+  /**
+   * @throws Exception
+   */
+  public function testListPage()
+  {
     $listPage = LeadModel::list(page: 1);
-    $this->assertInstanceOf('Illuminate\Support\Collection', $listPage);
+    $this->assertInstanceOf(Collection::class, $listPage);
+  }
 
+  /**
+   * @throws Exception
+   */
+  public function testListWithContacts()
+  {
     $listWith = LeadModel::list(with: ['contacts']);
-    $this->assertInstanceOf('Illuminate\Support\Collection', $listWith);
+    $this->assertInstanceOf(Collection::class, $listWith);
   }
 }

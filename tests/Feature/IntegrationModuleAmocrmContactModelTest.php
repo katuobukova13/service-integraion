@@ -6,7 +6,9 @@ use AmoCRM\Exceptions\AmoCRMApiException;
 use AmoCRM\Exceptions\AmoCRMMissedTokenException;
 use AmoCRM\Exceptions\AmoCRMoAuthApiException;
 use App\Modules\Integration\Domain\Amocrm\Contact\ContactModel;
+use Exception;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 class IntegrationModuleAmocrmContactModelTest extends TestCase
@@ -25,20 +27,21 @@ class IntegrationModuleAmocrmContactModelTest extends TestCase
 
     for ($i = 0; $i < 3; $i++) {
       $phones[] = $this->faker->phoneNumber;
-    };
+    }
 
-    $model = ContactModel::create(["first_name" => $firstName, "last_name" => $lastName, "cf_phone" => $phones]);
+    $model = ContactModel::create([
+      "first_name" => $firstName,
+      "last_name" => $lastName,
+      "cf_phone" => $phones
+    ]);
 
     $contact = ContactModel::find($model->attributes['id']);
 
-    $this->assertInstanceOf('App\Modules\Integration\Domain\Amocrm\Contact\ContactModel', $contact);
+    $this->assertInstanceOf(ContactModel::class, $contact);
     $this->assertEquals($model->attributes['id'], $contact->attributes['id']);
   }
 
   /**
-   * @throws AmoCRMApiException
-   * @throws AmoCRMoAuthApiException
-   * @throws AmoCRMMissedTokenException
    */
   public function testCreateContact(): void
   {
@@ -47,11 +50,11 @@ class IntegrationModuleAmocrmContactModelTest extends TestCase
 
     for ($i = 0; $i < 3; $i++) {
       $phones[] = $this->faker->phoneNumber;
-    };
+    }
 
     $model = ContactModel::create(["first_name" => $firstName, "last_name" => $lastName, "cf_phone" => $phones]);
 
-    $this->assertInstanceOf('App\Modules\Integration\Domain\Amocrm\Contact\ContactModel', $model);
+    $this->assertInstanceOf(ContactModel::class, $model);
     $this->assertEquals($firstName, $model->attributes['first_name']);
     $this->assertEquals($lastName, $model->attributes['last_name']);
     $this->assertEquals($model->attributes["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.contacts.phone'));
@@ -70,7 +73,7 @@ class IntegrationModuleAmocrmContactModelTest extends TestCase
     $lastName = $this->faker->lastName;
     for ($i = 0; $i < 2; $i++) {
       $phones[] = $this->faker->phoneNumber;
-    };
+    }
 
     $firstNameUpdate = $this->faker->firstName;
     $phonesUpdate[] = $this->faker->phoneNumber;
@@ -86,7 +89,7 @@ class IntegrationModuleAmocrmContactModelTest extends TestCase
 
     $contact = ContactModel::find($contact->attributes['id']);
 
-    $this->assertInstanceOf('App\Modules\Integration\Domain\Amocrm\Contact\ContactModel', $contact);
+    $this->assertInstanceOf(ContactModel::class, $contact);
     $this->assertEquals($firstNameUpdate, $contact->attributes['first_name']);
     $this->assertEquals($contact->attributes["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.contacts.phone'));
     $this->assertContains($phonesUpdate[0], $contact->attributes["custom_fields_values"][0]['values'][0]);
@@ -95,39 +98,52 @@ class IntegrationModuleAmocrmContactModelTest extends TestCase
   }
 
   /**
-   * @throws AmoCRMoAuthApiException
-   * @throws AmoCRMApiException
-   * @throws AmoCRMMissedTokenException
+   * @throws Exception
    */
-  public function testListContacts(): void
+  public function testListFilterContacts(): void
   {
     $firstName = $this->faker->firstName;
     $lastName = $this->faker->lastName;
     $phones1[] = $this->faker->phoneNumber;
     $phones2[] = $this->faker->phoneNumber;
-    $phones3[] = $this->faker->phoneNumber;
 
     $model1 = ContactModel::create(["first_name" => $firstName, "last_name" => $lastName, "cf_phone" => $phones1]);
     $model2 = ContactModel::create(["first_name" => $firstName, "last_name" => $lastName, "cf_phone" => $phones2]);
-    $model3 = ContactModel::create(["first_name" => $firstName, "last_name" => $lastName, "cf_phone" => $phones3]);
 
     $listFilter = ContactModel::list(filter: ['id' => [$model1->attributes['id'], $model2->attributes['id']]]);
 
-    $this->assertInstanceOf('Illuminate\Support\Collection', $listFilter);
+    $this->assertInstanceOf(Collection::class, $listFilter);
     $this->assertEquals(2, $listFilter->count());
-    $this->assertTrue($listFilter->contains('id', $model1->attributes['id']));
-    $this->assertTrue($listFilter->contains('id', $model2->attributes['id']));
-    $this->assertFalse($listFilter->contains('id', $model3->attributes['id']));
+    $this->assertEquals($listFilter[0]->attributes['id'], $model1->attributes['id']);
+    $this->assertEquals($listFilter[1]->attributes['id'], $model2->attributes['id']);
+  }
 
+  /**
+   * @throws Exception
+   */
+  public function testListLimitContacts()
+  {
     $listLimit = ContactModel::list(limit: 5);
 
-    $this->assertInstanceOf('Illuminate\Support\Collection', $listLimit);
+    $this->assertInstanceOf(Collection::class, $listLimit);
     $this->assertEquals(5, $listLimit->count());
+  }
 
+  /**
+   * @throws Exception
+   */
+  public function testListPageContacts()
+  {
     $listPage = ContactModel::list(page: 1);
-    $this->assertInstanceOf('Illuminate\Support\Collection', $listPage);
+    $this->assertInstanceOf(Collection::class, $listPage);
+  }
 
+  /**
+   * @throws Exception
+   */
+  public function testListWithLeads()
+  {
     $listWith = ContactModel::list(with: ['leads']);
-    $this->assertInstanceOf('Illuminate\Support\Collection', $listWith);
+    $this->assertInstanceOf(Collection::class, $listWith);
   }
 }

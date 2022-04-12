@@ -9,6 +9,7 @@ use AmoCRM\Exceptions\InvalidArgumentException;
 use App\Modules\Integration\Domain\Amocrm\Contact\ContactModel as AmocrmContact;
 use App\Modules\Integration\Domain\Amocrm\Lead\LeadModel as AmocrmLead;
 use App\Modules\Integration\Domain\Amocrm\Link\LinkModel;
+use Exception;
 use JetBrains\PhpStorm\ArrayShape;
 
 class AmocrmOrderService
@@ -31,10 +32,12 @@ class AmocrmOrderService
    * @param int|null $order
    * @param string|null $integrator
    * @return array
+
    * @throws AmoCRMApiException
    * @throws AmoCRMMissedTokenException
    * @throws AmoCRMoAuthApiException
    * @throws InvalidArgumentException
+   * @throws Exception
    */
 
   #[ArrayShape(['contact' => "array", 'lead' => "array", 'link' => "array"])]
@@ -57,17 +60,20 @@ class AmocrmOrderService
     string $integrator = null,
   ): array
   {
-    $contact = AmocrmContact::create([
-      'first_name' => $contactFirstName,
-      'last_name' => $contactLastName,
-      'name' => $contactFirstName . ' ' . $contactLastName,
-      'cf_email' => $contactEmail,
-      'cf_phone' => $contactPhone,
-      'cf_city' => $contactCity,
-      'cf_country' => $contactCountry,
-      'cf_position' => $contactPosition,
-      'cf_partner' => $contactPartner,
-    ]);
+    $contact =
+      AmocrmContact::list(filter: ['email' => $contactEmail])->first() ??
+      AmocrmContact::list(filter: ['phone' => $contactPhone])->first() ??
+      AmocrmContact::create([
+        'first_name' => $contactFirstName,
+        'last_name' => $contactLastName,
+        'name' => $contactFirstName . ' ' . $contactLastName,
+        'cf_email' => $contactEmail,
+        'cf_phone' => $contactPhone,
+        'cf_city' => $contactCity,
+        'cf_country' => $contactCountry,
+        'cf_position' => $contactPosition,
+        'cf_partner' => $contactPartner,
+      ]);
 
     $lead = AmocrmLead::create([
       'name' => $title,

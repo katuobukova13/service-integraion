@@ -4,6 +4,9 @@ namespace App\Modules\Integration\Domain\Amocrm;
 
 use AmoCRM\Exceptions\AmoCRMoAuthApiException;
 use AmoCRM\Models\BaseApiModel;
+use App\Modules\Integration\Core\Concerns\ResourceRequestBodyFormat;
+use App\Modules\Integration\Core\Concerns\ResourceRequestMethod;
+use App\Modules\Integration\Core\Concerns\ResourceRequestOptions;
 use App\Modules\Integration\Core\Facades\ResourceModel;
 use Illuminate\Support\Facades\App;
 use Exception;
@@ -49,11 +52,14 @@ abstract class AmocrmModel extends ResourceModel
       'with' => $with,
       'filter' => $filter,
       'limit' => $limit,
-      'page' => $page];
+      'page' => $page
+    ];
 
-    $queryString = http_build_query($parameters);
-
-    $response = $model->resource->fetch('?' . $queryString);
+    $response = $model->resource->fetch('', new ResourceRequestOptions(
+      method: ResourceRequestMethod::GET,
+      body: $parameters,
+      bodyFormat: ResourceRequestBodyFormat::QUERY
+    ));
 
     return $response === null ? [] : $response;
   }
