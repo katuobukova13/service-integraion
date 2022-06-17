@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Modules\Integration\Core\Concerns\ResourceRequestMethod;
-use App\Modules\Integration\Core\Concerns\ResourceRequestOptions;
+use App\Modules\Integration\Core\Concerns\RequestMethod;
+use App\Modules\Integration\Core\Facades\RequestOptions;
 use App\Modules\Integration\Domain\Amocrm\Contact\ContactResource;
 use Exception;
 use Tests\TestCase;
@@ -29,8 +29,8 @@ class IntegrationModuleAmocrmContactResourceTest extends TestCase
    */
   public function testAmocrmFetch(): void
   {
-    $resource = (new ContactResource)->fetch('', new ResourceRequestOptions(
-      method: ResourceRequestMethod::GET,
+    $resource = (new ContactResource)->fetch('', new RequestOptions(
+      method: RequestMethod::GET,
     ));
 
     $this->assertIsArray($resource);

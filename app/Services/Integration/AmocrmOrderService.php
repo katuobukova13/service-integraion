@@ -6,6 +6,7 @@ use AmoCRM\Exceptions\AmoCRMApiException;
 use AmoCRM\Exceptions\AmoCRMMissedTokenException;
 use AmoCRM\Exceptions\AmoCRMoAuthApiException;
 use AmoCRM\Exceptions\InvalidArgumentException;
+use App\Modules\Integration\Domain\Amocrm\AmocrmSamplingClause;
 use App\Modules\Integration\Domain\Amocrm\Contact\ContactModel as AmocrmContact;
 use App\Modules\Integration\Domain\Amocrm\Lead\LeadModel as AmocrmLead;
 use App\Modules\Integration\Domain\Amocrm\Link\LinkModel;
@@ -19,36 +20,30 @@ class AmocrmOrderService
    * @param string $contactLastName
    * @param array $contactPhone
    * @param array $contactEmail
+   * @param string $title
+   * @param int|null $price
+   * @param string|null $payDate
    * @param string|null $contactCity
    * @param string|null $contactCountry
    * @param string|null $contactPosition
    * @param string|null $contactPartner
-   * @param string $title
-   * @param int $price
    * @param int|null $groupId
    * @param int|null $responsibleUserId
    * @param int|null $sourceId
-   * @param string $payDate
-   * @param int|null $order
+   * @param int|null $orderId
+   * @param int|null $orderNum
    * @param string|null $integrator
    * @return array
-
    * @throws AmoCRMApiException
-   * @throws AmoCRMMissedTokenException
-   * @throws AmoCRMoAuthApiException
-   * @throws InvalidArgumentException
-   * @throws Exception
    */
-
-  #[ArrayShape(['contact' => "array", 'lead' => "array", 'link' => "array"])]
   public function create(
     string $contactFirstName,
     string $contactLastName,
     array  $contactPhone,
     array  $contactEmail,
     string $title,
-    int    $price,
-    string $payDate,
+    int    $price = null,
+    string $payDate = null,
     string $contactCity = null,
     string $contactCountry = null,
     string $contactPosition = null,
@@ -56,23 +51,24 @@ class AmocrmOrderService
     int    $groupId = null,
     int    $responsibleUserId = null,
     int    $sourceId = null,
-    int    $order = null,
+    int    $orderId = null,
+    int    $orderNum = null,
     string $integrator = null,
   ): array
   {
     $contact =
-      AmocrmContact::list(filter: ['email' => $contactEmail])->first() ??
-      AmocrmContact::list(filter: ['phone' => $contactPhone])->first() ??
+      AmocrmContact::list(new AmocrmSamplingClause(filter: ['emails' => $contactEmail]))->first() ??
+      AmocrmContact::list(new AmocrmSamplingClause(filter: ['phones' => $contactPhone]))->first() ??
       AmocrmContact::create([
         'first_name' => $contactFirstName,
         'last_name' => $contactLastName,
         'name' => $contactFirstName . ' ' . $contactLastName,
-        'cf_email' => $contactEmail,
-        'cf_phone' => $contactPhone,
-        'cf_city' => $contactCity,
-        'cf_country' => $contactCountry,
-        'cf_position' => $contactPosition,
-        'cf_partner' => $contactPartner,
+        'emails' => $contactEmail,
+        'phones' => $contactPhone,
+        'city' => $contactCity,
+        'country' => $contactCountry,
+        'position' => $contactPosition,
+        'partner' => $contactPartner,
       ]);
 
     $lead = AmocrmLead::create([
@@ -81,9 +77,10 @@ class AmocrmOrderService
       'group_id' => $groupId,
       'responsible_user_id' => $responsibleUserId,
       'source_id' => $sourceId,
-      'cf_pay_date' => $payDate,
-      'cf_order' => $order,
-      'cf_integrator' => $integrator,
+      'pay_date' => $payDate,
+      'order_id' => $orderId,
+      'order_num' => $orderNum,
+      'integrator' => "Advance Integration Service v1.0",
     ]);
 
     $link = LinkModel::link($lead, $contact);
@@ -91,7 +88,7 @@ class AmocrmOrderService
     return [
       'contact' => $contact->attributes,
       'lead' => $lead->attributes,
-      'link' => $link->attributes,
+      'link' => $link->attributes[0],
     ];
   }
 }

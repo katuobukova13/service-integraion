@@ -2,41 +2,43 @@
 
 namespace App\Modules\Integration\Domain\Amocrm;
 
-use AmoCRM\Exceptions\AmoCRMoAuthApiException;
-use App\Modules\Integration\Core\Concerns\ResourceDataType;
-use App\Modules\Integration\Core\Concerns\ResourceRequestOptions;
+use App\Modules\Integration\Core\Concerns\DataType;
+use App\Modules\Integration\Core\Concerns\RequestBodyFormat;
+use App\Modules\Integration\Core\Concerns\RequestMethod;
+use App\Modules\Integration\Core\Facades\RequestOptions;
 use App\Modules\Integration\Core\Facades\Resource;
-use League\Flysystem\Exception;
+use App\Modules\Integration\Core\Facades\SamplingClause;
+use Exception;
 
 class AmocrmResource extends Resource
 {
   /**
-   * @throws AmoCRMoAuthApiException
    * @throws Exception
    */
-  public function __construct()
+  public function fetchList(SamplingClause $clause = new SamplingClause()): array
   {
-    $subdomain = config('services.amocrm.advance.subdomain');
-    $clientId = config('services.amocrm.advance.client_id');
-    $clientSecret = config('services.amocrm.advance.client_secret');
-    $authCode = config('services.amocrm.advance.auth_code');
-    $redirectUri = config('services.amocrm.advance.redirect_uri');
+    $response = $this->fetch('', new RequestOptions(
+      method: RequestMethod::GET,
+      body: $clause->toArray(),
+      bodyFormat: RequestBodyFormat::QUERY
+    ));
 
-    $this->apiClient = new AmocrmAPIClient($subdomain, $clientId, $clientSecret, $authCode, $redirectUri);
+    return $response ?? [];
   }
 
-  public function fetch(string $url = '', ResourceRequestOptions $options = null): mixed
+  public function fetch(string $url = '', RequestOptions $options = null): mixed
   {
-    $secretKey = $this->apiClient::getTokenData(config('services.amocrm.advance.subdomain') . '.' . 'amocrm.ru');;
+    $baseDomain = config('services.amocrm.advance.subdomain') . '.' . 'amocrm.ru';
+    $secretKey = AmocrmAPIClient::getTokenData($baseDomain);
 
-    return parent::fetch($url, new ResourceRequestOptions(
-      method: $options->getMethod(),
-      headers: collect($options->getHeaders())->merge([
+    return parent::fetch($url, new RequestOptions(
+      method: $options->method,
+      headers: collect($options->headers)->merge([
         'Accept' => 'application/json',
-         "Authorization" => "Bearer " . $secretKey["access_token"],
+        "Authorization" => "Bearer " . $secretKey["access_token"],
       ])->all(),
-      body: $options->getBody(),
-      bodyFormat: $options->getBodyFormat()
+      body: $options->body,
+      bodyFormat: $options->bodyFormat
     ));
   }
 
@@ -47,8 +49,8 @@ class AmocrmResource extends Resource
     return "https://$hostname.amocrm.ru/api/v4";
   }
 
-  protected function dataType(): ResourceDataType
+  protected function dataType(): DataType
   {
-    return ResourceDataType::JSON;
+    return DataType::JSON;
   }
 }

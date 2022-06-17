@@ -5,30 +5,30 @@ namespace App\Http\Controllers;
 use AmoCRM\Exceptions\AmoCRMApiException;
 use AmoCRM\Exceptions\AmoCRMMissedTokenException;
 use AmoCRM\Exceptions\AmoCRMoAuthApiException;
-use AmoCRM\Exceptions\InvalidArgumentException;
-use App\Http\Requests\ContactRequest;
+use App\Http\Requests\Amocrm\Contact\ContactIndexRequest;
+use App\Http\Requests\Amocrm\Contact\ContactStoreRequest;
+use App\Http\Requests\Amocrm\Contact\ContactUpdateRequest;
 use App\Services\Integration\AmocrmContactService;
 use Exception;
-use JetBrains\PhpStorm\ArrayShape;
+use Illuminate\Support\Collection;
 
 class AmocrmContactController extends Controller
 {
   /**
-   * @throws InvalidArgumentException
-   * @throws AmoCRMApiException
-   * @throws AmoCRMMissedTokenException
-   * @throws AmoCRMoAuthApiException
+   * @param ContactStoreRequest $request
+   * @param AmocrmContactService $contactService
+   * @return array
+   * @throws Exception
    */
-  #[ArrayShape(['contact' => "\App\Modules\Integration\Domain\Amocrm\Contact\ContactModel"])]
-  public function store(ContactRequest $request, AmocrmContactService $contactService): array
+  public function store(ContactStoreRequest $request, AmocrmContactService $contactService): array
   {
     $attributes = $request->validated();
 
     return $contactService->create(
       firstName: $attributes['first_name'],
       lastName: $attributes['last_name'],
-      phone: $attributes['phone'],
-      email: $attributes['email'],
+      phones: $attributes['phones'],
+      emails: $attributes['emails'],
       city: $attributes['city'] ?? null,
       country: $attributes['country'] ?? null,
       position: $attributes['position'] ?? null,
@@ -41,16 +41,15 @@ class AmocrmContactController extends Controller
    * @throws AmoCRMoAuthApiException
    * @throws AmoCRMMissedTokenException
    */
-  #[ArrayShape(['contact' => "\App\Modules\Integration\Domain\Amocrm\Contact\ContactModel"])]
-  public function update(ContactRequest $request, AmocrmContactService $contactService, int $id): array
+  public function update(ContactUpdateRequest $request, AmocrmContactService $contactService, int $id): array
   {
     $attributes = $request->validated();
 
     return $contactService->update(
       id: $id,
       firstName: $attributes['first_name'] ?? null,
-      phone: $attributes['phone'] ?? null,
-      email: $attributes['email'] ?? null,
+      phones: $attributes['phones'] ?? null,
+      emails: $attributes['emails'] ?? null,
       lastName: $attributes['last_name'] ?? null,
       city: $attributes['city'] ?? null,
       country: $attributes['country'] ?? null,
@@ -63,29 +62,28 @@ class AmocrmContactController extends Controller
    * @param AmocrmContactService $contactService
    * @param int $id
    * @return array
+   * @throws Exception
    */
-
-  #[ArrayShape(['contact' => "\App\Modules\Integration\Domain\Amocrm\Contact\ContactModel"])]
   public function show(AmocrmContactService $contactService, int $id): array
   {
     return $contactService->find($id);
   }
 
   /**
-   * @param ContactRequest $request
+   * @param ContactIndexRequest $request
    * @param AmocrmContactService $contactService
-   * @return array
+   * @return Collection
    * @throws Exception
    */
-  #[ArrayShape(['contacts' => "\Illuminate\Support\Collection"])]
-  public function index(ContactRequest $request, AmocrmContactService $contactService): array
+  public function index(ContactIndexRequest $request, AmocrmContactService $contactService): Collection
   {
     $attributes = $request->validated();
 
     return $contactService->list(
       with: $attributes['with'] ?? [],
       filter: $attributes['filter'] ?? [],
-      page: $attributes['page'] ?? null,
-      limit: $attributes['limit'] ?? null);
+      page: $attributes['page'] ?? 1,
+      limit: $attributes['limit'] ?? 50,
+    )->map(fn($contactModel) => $contactModel->attributes);
   }
 }

@@ -3,119 +3,267 @@
 namespace App\Modules\Integration\Domain\Amocrm\Contact;
 
 use AmoCRM\Collections\CustomFieldsValuesCollection;
+use AmoCRM\Exceptions\AmoCRMApiErrorResponseException;
 use AmoCRM\Exceptions\AmoCRMApiException;
 use AmoCRM\Exceptions\AmoCRMMissedTokenException;
 use AmoCRM\Exceptions\AmoCRMoAuthApiException;
-use AmoCRM\Models\BaseApiModel;
-use AmoCRM\Models\ContactModel as SDKContactModel;
+use AmoCRM\Models\ContactModel as ContactSDKModel;
+use App\Modules\Integration\Core\Concerns\Crud;
+use App\Modules\Integration\Core\Concerns\RequestBodyFormat;
+use App\Modules\Integration\Core\Concerns\RequestMethod;
+use App\Modules\Integration\Core\Facades\BaseModel;
+use App\Modules\Integration\Core\Facades\RequestOptions;
+use App\Modules\Integration\Domain\Amocrm\AmocrmAPIClient;
 use App\Modules\Integration\Domain\Amocrm\AmocrmCustomField;
-use App\Modules\Integration\Domain\Amocrm\AmocrmModel;
+use App\Modules\Integration\Domain\Amocrm\AmocrmSamplingClause;
 use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
+use JetBrains\PhpStorm\ArrayShape;
 
-class ContactModel extends AmocrmModel
+final class ContactModel extends BaseModel implements Crud
 {
-  public BaseApiModel $sdkModel;
-
-  public function __construct(SDKContactModel $sdkModel, ContactResource $resource)
+  /**
+   * @throws Exception
+   */
+  public function __construct(
+    public AmocrmAPIClient $apiClient,
+    public ContactResource $resource,
+    public ContactSDKModel $sdkModel
+  )
   {
-    $this->sdkModel = $sdkModel;
-    $this->resource = $resource;
+    if (empty(config('services.amocrm.advance.custom_fields.contacts.city')))
+      throw new Exception('Отсутствует id кастомного поля city');
 
-    parent::__construct();
+    if (empty(config('services.amocrm.advance.custom_fields.contacts.country')))
+      throw new Exception('Отсутствует id кастомного поля country');
+
+    if (empty(config('services.amocrm.advance.custom_fields.contacts.position')))
+      throw new Exception('Отсутствует id кастомного поля position');
+
+    if (empty(config('services.amocrm.advance.custom_fields.contacts.phones')))
+      throw new Exception('Отсутствует id кастомного поля phones');
+
+    if (empty(config('services.amocrm.advance.custom_fields.contacts.emails')))
+      throw new Exception('Отсутствует id кастомного поля emails');
+
+    if (empty(config('services.amocrm.advance.custom_fields.contacts.partner')))
+      throw new Exception('Отсутствует id кастомного поля partner');
   }
 
   /**
    * @param int $id
    * @return ContactModel
+   * @throws AmoCRMApiException
+   * @throws Exception
    */
-  public static function find(int $id): static
+  public static function find(int $id): self
   {
-    $model = App::make(static::class);
+    /**
+     * @var ContactModel $model
+     */
 
-    $contactsService = $model->apiClient->apiClientSDK->contacts();
+    $model = App::make(self::class);
+
+    try {
+      $contactsService = $model->apiClient->client->contacts();
+    } catch (AmoCRMApiErrorResponseException $e) {
+      dump($e->getValidationErrors());
+      throw new Exception('Validation error');
+    }
 
     $model->sdkModel = $contactsService->getOne($id);
 
-    $model->setAttributes($model->sdkModel->toArray());
+    $attributes = $model->getFields($model->sdkModel->toArray());
+
+    $model->setAttributes($attributes);
 
     return $model;
+  }
+
+  public function getFields($sdkFields): array
+  {
+    $fields = [];
+
+    foreach ($sdkFields as $key => $value) {
+      if ($value !== null) {
+        switch ($key) {
+          case 'first_name':
+          case 'last_name':
+          case 'id':
+            $fields[$key] = $value;
+            break;
+          case "custom_fields_values":
+            foreach ($sdkFields["custom_fields_values"] as $cfKey => $cfValue) {
+              $this->setCustomToSimpleField($cfValue, $fields);
+            }
+            break;
+          default:
+            break;
+        }
+      }
+    }
+
+    $fields['name'] = $fields['first_name'] . ' ' . $fields['last_name'];
+
+    return $fields;
+  }
+
+  private function setCustomToSimpleField($customField, &$fields)
+  {
+    switch ($customField['field_id']) {
+      case config('services.amocrm.advance.custom_fields.contacts.emails'):
+        foreach ($customField['values'] as $key => $value) {
+          $fields['emails'][] = $value['value'];
+        }
+
+        break;
+      case config('services.amocrm.advance.custom_fields.contacts.phones'):
+        foreach ($customField['values'] as $key => $value) {
+          $fields['phones'][] = $value['value'];
+        }
+        break;
+      case config('services.amocrm.advance.custom_fields.contacts.city'):
+        $fields['city'] = $customField['values'][0]['value'];
+
+        break;
+      case config('services.amocrm.advance.custom_fields.contacts.country'):
+        $fields['country'] = $customField['values'][0]['value'];
+
+        break;
+      case config('services.amocrm.advance.custom_fields.contacts.position'):
+        $fields['position'] = $customField['values'][0]['value'];
+
+        break;
+      case config('services.amocrm.advance.custom_fields.contacts.partner'):
+        $fields['partner'] = $customField['values'][0]['value'];
+
+        break;
+    }
   }
 
   /**
    * @param array $attributes
    * @return ContactModel
+   * @throws AmoCRMApiException
+   * @throws Exception
    */
   public static function create(array $attributes): ContactModel
   {
-    $model = App::make(static::class);
+    /**
+     * @var ContactModel $model
+     */
 
-    $model->setCustomFields($attributes);
+    $model = App::make(self::class);
 
-    foreach ($attributes as $key => $value) {
-      $model->setNativeFields($key, $value);
+    $model->setNativeFieldsFromAttributes($attributes);
+    $model->setCustomFieldsFromAttributes($attributes);
+
+    try {
+      $model->sdkModel = $model->apiClient->client->contacts()->addOne($model->sdkModel);
+    } catch (AmoCRMApiErrorResponseException $e) {
+      dump($e->getValidationErrors());
+      throw new Exception('Validation error');
     }
 
-    $model->sdkModel = $model->apiClient->apiClientSDK->contacts()->addOne($model->sdkModel);
+    $attributes = $model->getFields($model->sdkModel->toArray());
 
-    $model->setAttributes($model->sdkModel->toArray());
+    $model->setAttributes($attributes);
 
     return $model;
   }
 
-  /**
-   * @throws AmoCRMApiException
-   * @throws AmoCRMoAuthApiException
-   * @throws AmoCRMMissedTokenException
-   * @throws Exception
-   */
-  public function update(array $attributes)
+  private function setNativeFieldsFromAttributes(array $attributes): void
   {
-    $this->setCustomFields($attributes);
+    foreach ($attributes as $key => $value) {
+      if (!isset($value)) continue;
 
-    $updatingFields = array_intersect_key($attributes, $this->attributes);
-
-    foreach ($updatingFields as $key => $value) {
-      $this->setNativeFields($key, $value);
+      switch ($key) {
+        case 'first_name':
+          $this->sdkModel->setFirstName($value);
+          break;
+        case 'last_name':
+          $this->sdkModel->setLastName($value);
+          break;
+        case 'name':
+          $this->sdkModel->setName($value);
+          break;
+        case 'responsible_user_id':
+          $this->sdkModel->setResponsibleUserId($value);
+          break;
+        default:
+          break;
+      }
     }
-
-    $this->sdkModel = $this->apiClient->apiClientSDK->contacts()->updateOne($this->sdkModel);
   }
 
-  /**
-   * @param array|null $select
-   * @param array|null $with
-   * @param array|null $filter
-   * @param int|null $page
-   * @param int|null $limit
-   * @return Collection
-   * @throws Exception
-   */
-  public static function list(?array $select = [], ?array $with = [], ?array $filter = [], ?int $page = null, ?int $limit = null): Collection
+  private function setCustomFieldsFromAttributes(array $attributes): void
   {
-    $filterModified = null;
+    $customFieldsValuesCollection = new CustomFieldsValuesCollection();
 
-    if ($filter != []) {
-      $filterModified = self::changeFilterQuery($filter);
-    }
+    foreach ($attributes as $key => $value) {
+      if (!isset($value)) continue;
 
-    $response = $filterModified != null ?
-      parent::fetchList($select, $with, $filterModified, $page, $limit) :
-      parent::fetchList($select, $with, $filter, $page, $limit);
+      switch ($key) {
+        case 'city':
+          $keyId = config('services.amocrm.advance.custom_fields.contacts.city');
 
-    $collection = collect();
+          $customFieldsValuesCollection->add(
+            AmocrmCustomField::textField($keyId, $value)->getValuesModel()
+          );
 
-    if ($response != null) {
-      foreach ($response["_embedded"]["contacts"] as $contact) {
-        $model = App::make(static::class);
-        $model->setAttributes($contact);
-        $model->sdkModel = (new SDKContactModel())->setId($contact['id']);
-        $collection->add($model);
+          break;
+        case 'country':
+          $keyId = config('services.amocrm.advance.custom_fields.contacts.country');
+
+          $customFieldsValuesCollection->add(
+            AmocrmCustomField::textField($keyId, $value)->getValuesModel()
+          );
+
+          break;
+        case 'position':
+          $keyId = config('services.amocrm.advance.custom_fields.contacts.position');
+
+          $customFieldsValuesCollection->add(
+            AmocrmCustomField::textField($keyId, $value)->getValuesModel()
+          );
+
+          break;
+        case 'phones':
+          $keyId = config('services.amocrm.advance.custom_fields.contacts.phones');
+
+          $values = $this->updateOrCreateCustomPhoneOrEmail($keyId, $value);
+
+          foreach ($values as $item) {
+            $customFieldsValuesCollection->add(
+              AmocrmCustomField::textField($keyId, $item)->getValuesModel()
+            );
+          }
+
+          break;
+        case 'emails':
+          $keyId = config('services.amocrm.advance.custom_fields.contacts.emails');
+
+          $values = $this->updateOrCreateCustomPhoneOrEmail($keyId, $value);
+
+          foreach ($values as $item) {
+            $customFieldsValuesCollection->add(
+              AmocrmCustomField::textField($keyId, $item)->getValuesModel()
+            );
+          }
+
+          break;
+        case 'partner':
+          $keyId = config('services.amocrm.advance.custom_fields.contacts.partner');
+
+          $customFieldsValuesCollection->add(
+            AmocrmCustomField::textField($keyId, $value)->getValuesModel()
+          );
+          break;
       }
     }
 
-    return $collection;
+    $this->sdkModel->setCustomFieldsValues($customFieldsValuesCollection);
   }
 
   private function updateOrCreateCustomPhoneOrEmail($keyId, $value)
@@ -137,104 +285,64 @@ class ContactModel extends AmocrmModel
     return array_unique($value);
   }
 
-  public function setNativeFields($key, $value)
+  /**
+   * @param AmocrmSamplingClause $samplingClause
+   * @return Collection
+   * @throws Exception
+   */
+  public static function list(AmocrmSamplingClause $samplingClause): Collection
   {
-    if ($value !== null) {
-      switch ($key) {
-        case 'first_name':
-          $this->sdkModel->setFirstName($value);
-          break;
-        case 'last_name':
-          $this->sdkModel->setLastName($value);
-          break;
-        case 'name':
-          $this->sdkModel->setName($value);
-          break;
-        case 'responsible_user_id':
-          $this->sdkModel->setResponsibleUserId($value);
-          break;
-        default:
-          break;
-      }
+    /**
+     * @var ContactModel $blankModel
+     */
+
+    $blankModel = App::make(self::class);
+
+    $rawSamplingClause = $blankModel->getRawSamplingClause($samplingClause);
+
+    $response = $blankModel->resource->fetch('', new RequestOptions(
+      method: RequestMethod::GET,
+      body: $rawSamplingClause,
+      bodyFormat: RequestBodyFormat::QUERY
+    ));
+
+    $collection = collect();
+
+    foreach ($response["_embedded"]["contacts"] ?? [] as $contact) {
+      $model = App::make(self::class);
+      $attributes = $model->getFields($contact);
+      $model->setAttributes($attributes);
+      $model->sdkModel = (new ContactSDKModel())->setId($contact['id']);
+      $collection->add($model);
     }
+
+    return $collection;
   }
 
-  public function setCustomFields($attributes)
+  #[ArrayShape([
+    'with' => "array",
+    'page' => "int",
+    'limit' => "int",
+    'query' => "string",
+    'filter' => "array",
+    'order' => "array"
+  ])]
+  public static function getRawSamplingClause(AmocrmSamplingClause $samplingClause): array
   {
-    $customUpdatingFields = array_filter($attributes, function ($attribute) {
-      return str_starts_with($attribute, 'cf_');
-    }, ARRAY_FILTER_USE_KEY);
+    $filterModified = null;
 
-    if ($customUpdatingFields) {
-      foreach ($customUpdatingFields as $field => $value) {
-        $fields[mb_substr($field, 3)] = $value;
-      }
-
-      $customFieldsCollection = new CustomFieldsValuesCollection();
-
-      foreach ($fields as $key => $value) {
-        if ($value != null) {
-          switch ($key) {
-            case 'city':
-              $keyId = config('services.amocrm.advance.custom_fields.contacts.city');
-
-              $customFieldsCollection->add(
-                AmocrmCustomField::textField($keyId, $value)->getValuesModel()
-              );
-
-              break;
-            case 'country':
-              $keyId = config('services.amocrm.advance.custom_fields.contacts.country');
-
-              $customFieldsCollection->add(
-                AmocrmCustomField::textField($keyId, $value)->getValuesModel()
-              );
-
-              break;
-            case 'position':
-              $keyId = config('services.amocrm.advance.custom_fields.contacts.position');
-
-              $customFieldsCollection->add(
-                AmocrmCustomField::textField($keyId, $value)->getValuesModel()
-              );
-
-              break;
-            case 'phone':
-              $keyId = config('services.amocrm.advance.custom_fields.contacts.phone');
-
-              $values = $this->updateOrCreateCustomPhoneOrEmail($keyId, $value);
-
-              foreach ($values as $item) {
-                $customFieldsCollection->add(
-                  AmocrmCustomField::textField($keyId, $item)->getValuesModel()
-                );
-              }
-
-              break;
-            case 'email':
-              $keyId = config('services.amocrm.advance.custom_fields.contacts.email');
-
-              $values = $this->updateOrCreateCustomPhoneOrEmail($keyId, $value);
-
-              foreach ($values as $item) {
-                $customFieldsCollection->add(
-                  AmocrmCustomField::textField($keyId, $item)->getValuesModel()
-                );
-              }
-
-              break;
-            case 'partner':
-              $keyId = config('services.amocrm.advance.custom_fields.contacts.partner');
-
-              $customFieldsCollection->add(
-                AmocrmCustomField::textField($keyId, $value)->getValuesModel()
-              );
-              break;
-          }
-        }
-      }
-      $this->sdkModel->setCustomFieldsValues($customFieldsCollection);
+    if ($samplingClause->filter != []) {
+      $filterModified = self::changeFilterQuery($samplingClause->filter);
     }
+
+    $samplingClause = new AmocrmSamplingClause(
+      with: $samplingClause->with,
+      page: $samplingClause->page,
+      limit: $samplingClause->limit,
+      filter: $filterModified != null ? $filterModified : $samplingClause->filter
+    );
+
+    return $samplingClause->toArray();
   }
 
   public static function changeFilterQuery($filter): array
@@ -276,8 +384,8 @@ class ContactModel extends AmocrmModel
             $filterModified['custom_fields'][$keyId] = $value;
 
           break;
-        case 'phone':
-          $keyId = config('services.amocrm.advance.custom_fields.contacts.phone');
+        case 'phones':
+          $keyId = config('services.amocrm.advance.custom_fields.contacts.phones');
 
           if (is_array($value)) {
             foreach ($value as $item) {
@@ -287,8 +395,8 @@ class ContactModel extends AmocrmModel
             $filterModified['custom_fields'][$keyId] = $value;
 
           break;
-        case 'email':
-          $keyId = config('services.amocrm.advance.custom_fields.contacts.email');
+        case 'emails':
+          $keyId = config('services.amocrm.advance.custom_fields.contacts.emails');
 
           if (is_array($value)) {
             foreach ($value as $item) {
@@ -312,6 +420,25 @@ class ContactModel extends AmocrmModel
       }
     }
     return $filterModified;
+  }
+
+  /**
+   * @throws AmoCRMApiException
+   * @throws AmoCRMoAuthApiException
+   * @throws AmoCRMMissedTokenException
+   * @throws Exception
+   */
+  public function update(array $attributes)
+  {
+    $this->setNativeFieldsFromAttributes($attributes);
+    $this->setCustomFieldsFromAttributes($attributes);
+
+    try {
+      $this->sdkModel = $this->apiClient->client->contacts()->updateOne($this->sdkModel);
+    } catch (AmoCRMApiErrorResponseException $e) {
+      dump($e->getValidationErrors());
+      throw new Exception('Validation error');
+    }
   }
 }
 

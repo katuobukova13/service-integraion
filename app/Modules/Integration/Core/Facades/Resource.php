@@ -2,18 +2,17 @@
 
 namespace App\Modules\Integration\Core\Facades;
 
-use App\Modules\Integration\Core\Concerns\ResourceDataType;
-use App\Modules\Integration\Core\Concerns\ResourceRequestOptions;
-use Illuminate\Http\Client\Response;
-use Illuminate\Support\Facades\Http;
+use App\Modules\Integration\Core\Concerns\DataType;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
+use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 abstract class Resource
 {
   abstract protected function endpoint(): string;
-  abstract protected function dataType(): ResourceDataType;
+  abstract protected function dataType(): DataType;
 
   public static function buildUrl($origin, $pathName): string
   {
@@ -25,11 +24,11 @@ abstract class Resource
 
   /**
    * @param string $url
-   * @param ResourceRequestOptions $options
+   * @param RequestOptions $options
    * @return mixed
    * @throws Exception
    */
-  public function fetch(string $url, ResourceRequestOptions $options = new ResourceRequestOptions): mixed
+  public function fetch(string $url, RequestOptions $options = new RequestOptions): mixed
   {
     /**
      * @var  PromiseInterface|Response $response
@@ -40,11 +39,11 @@ abstract class Resource
 
     $finalUrl = self::buildUrl($this->endpoint(), $url);
 
-    $method = mb_strtolower($options->getMethod()->name);
+    $method = mb_strtolower($options->method->name);
 
-    $headers = $options->getHeaders();
-    $body = $options->getBody();
-    $bodyFormat = mb_strtolower($options->getBodyFormat()->name);
+    $headers = $options->headers;
+    $body = $options->body;
+    $bodyFormat = mb_strtolower($options->bodyFormat->name);
 
     $response = Http::withHeaders($headers)->send($method, $finalUrl, [
       $bodyFormat => $body,
@@ -63,7 +62,7 @@ abstract class Resource
      */
 
     return match ($this->dataType()) {
-      ResourceDataType::JSON => $response->json(),
+      DataType::JSON => $response->json(),
       default => $response->body(),
     };
   }

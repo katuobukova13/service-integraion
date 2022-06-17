@@ -108,4 +108,6 @@ return [
 
   'password_timeout' => 10800,
 
+  // @TODO [ТехДолг] временное решение, удалить после перехода на jwt аутентификацию
+  'tmp_auth_token' => env('TMP_AUTH_TOKEN'),
 ];

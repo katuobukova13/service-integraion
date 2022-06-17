@@ -2,29 +2,12 @@
 
 namespace App\Modules\Integration\Domain\Adveduplat\User;
 
-use App\Modules\Integration\Core\Concerns\ResourceDataType;
-use App\Modules\Integration\Domain\Adveduplat\AdveduplatResource as SyncResource;
+use App\Modules\Integration\Domain\Adveduplat\AdveduplatResource;
 
-class UserResource extends SyncResource
+final class UserResource extends AdveduplatResource
 {
-  function __construct()
+  protected function endpoint(): string
   {
-    parent::__construct();
-    $this->endpoint = $this->endpoint . '/api/admin/users';
-  }
-
-  public function fetch(string $url, array $options = []): mixed
-  {
-    $options = collect([
-      "headers" => [
-        "Authorization" => "Bearer " . config('services.adveduplat.api_token'),
-        "Content-Type" => "application/json",
-        "Access-Control-Allow-Origin" => "*",
-      ]
-    ])
-      ->merge($options)
-      ->all();
-
-    return parent::fetch($url, $options);
+    return self::buildUrl(parent::endpoint(), '/api/admin/users');
   }
 }

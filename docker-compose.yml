@@ -1,15 +1,16 @@
 version: "3.7"
 services:
   app:
-    image: integration-service-php-fpm
+    build:
+      context: .
+      dockerfile: ./docker/local/Dockerfile
     depends_on:
       - db
     ports:
       - ${APP_PORT:-8080}:80
     volumes:
       - .:/var/www/html
-      - ./docker/nginx/logs/:/var/log/nginx/
-      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/php.ini
+      - ./docker/local/php.ini:/usr/local/etc/php/conf.d/php.ini
 
   db:
     image: 'mysql/mysql-server'
@@ -24,6 +25,15 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - 'data:/var/lib/mysql'
+  swagger:
+    build:
+      context: .
+      dockerfile: ./docker/local/swagger.Dockerfile
+    ports:
+      - ${SWAGGER_APP_PORT}:8080
+    environment:
+      SWAGGER_JSON: /code/api.yml
+      BASE_URL: /api/documentation
 
 volumes:
   data:

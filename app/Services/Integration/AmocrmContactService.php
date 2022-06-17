@@ -5,29 +5,31 @@ namespace App\Services\Integration;
 use AmoCRM\Exceptions\AmoCRMApiException;
 use AmoCRM\Exceptions\AmoCRMMissedTokenException;
 use AmoCRM\Exceptions\AmoCRMoAuthApiException;
+use App\Modules\Integration\Domain\Amocrm\AmocrmSamplingClause;
 use App\Modules\Integration\Domain\Amocrm\Contact\ContactModel as AmocrmContact;
 use Exception;
-use JetBrains\PhpStorm\ArrayShape;
+use Illuminate\Support\Collection;
 
 class AmocrmContactService
 {
   /**
    * @param string $firstName
    * @param string $lastName
-   * @param array $phone
-   * @param array $email
+   * @param array $phones
+   * @param array $emails
    * @param string|null $city
    * @param string|null $country
    * @param string|null $position
    * @param string|null $partner
    * @param int|null $responsibleUserId
    * @return array
+   * @throws Exception
    */
   public function create(
     string $firstName,
     string $lastName,
-    array  $phone,
-    array  $email,
+    array  $phones,
+    array  $emails,
     string $city = null,
     string $country = null,
     string $position = null,
@@ -40,12 +42,12 @@ class AmocrmContactService
       'last_name' => $lastName,
       'name' => $firstName . ' ' . $lastName,
       'responsible_user_id' => $responsibleUserId,
-      'cf_email' => $email,
-      'cf_phone' => $phone,
-      'cf_city' => $city,
-      'cf_country' => $country,
-      'cf_position' => $position,
-      'cf_partner' => $partner,
+      'emails' => $emails,
+      'phones' => $phones,
+      'city' => $city,
+      'country' => $country,
+      'position' => $position,
+      'partner' => $partner,
     ]);
 
     return $contact->attributes;
@@ -54,10 +56,12 @@ class AmocrmContactService
   /**
    * @param int $id
    * @return array
+   * @throws Exception
    */
   public function find(int $id): array
   {
     $contact = AmocrmContact::find($id);
+
     return $contact->attributes;
   }
 
@@ -65,12 +69,13 @@ class AmocrmContactService
    * @throws AmoCRMApiException
    * @throws AmoCRMoAuthApiException
    * @throws AmoCRMMissedTokenException
+   * @throws Exception
    */
   public function update(
     int    $id,
     string $firstName = null,
-    array  $phone = null,
-    array  $email = null,
+    array  $phones = null,
+    array  $emails = null,
     string $lastName = null,
     string $city = null,
     string $country = null,
@@ -86,12 +91,12 @@ class AmocrmContactService
       'last_name' => $lastName,
       'name' => $firstName . ' ' . $lastName,
       'responsible_user_id' => $responsibleUserId,
-      'cf_email' => $email,
-      'cf_phone' => $phone,
-      'cf_city' => $city,
-      'cf_country' => $country,
-      'cf_position' => $position,
-      'cf_partner' => $partner,
+      'emails' => $emails,
+      'phones' => $phones,
+      'city' => $city,
+      'country' => $country,
+      'position' => $position,
+      'partner' => $partner,
     ]);
 
     $contactUpdated = AmocrmContact::find($contact->attributes['id']);
@@ -102,16 +107,13 @@ class AmocrmContactService
   /**
    * @throws Exception
    */
-  #[ArrayShape(['contacts' => "\Illuminate\Support\Collection"])]
   public function list(
     array $with = [],
     array $filter = [],
-    int   $page = null,
-    int   $limit = null,
-  ): array
+    int   $page = 1,
+    int   $limit = 50,
+  ): Collection
   {
-    $collection = AmocrmContact::list(with: $with, filter: $filter, page: $page, limit: $limit);
-
-    return ['contacts' => $collection];
+    return AmocrmContact::list(new AmocrmSamplingClause(with: $with, page: $page, limit: $limit, filter: $filter));
   }
 }

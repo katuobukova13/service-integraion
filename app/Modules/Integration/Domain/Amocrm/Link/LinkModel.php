@@ -3,38 +3,21 @@
 namespace App\Modules\Integration\Domain\Amocrm\Link;
 
 use AmoCRM\Collections\LinksCollection;
-use AmoCRM\Exceptions\AmoCRMApiException;
-use AmoCRM\Exceptions\AmoCRMMissedTokenException;
-use AmoCRM\Exceptions\AmoCRMoAuthApiException;
-use AmoCRM\Exceptions\InvalidArgumentException;
+use App\Modules\Integration\Core\Facades\BaseModel;
 use App\Modules\Integration\Domain\Amocrm\Contact\ContactModel;
 use App\Modules\Integration\Domain\Amocrm\Lead\LeadModel;
-use App\Modules\Integration\Domain\Amocrm\AmocrmModel;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 
-class LinkModel extends AmocrmModel
+final class LinkModel extends BaseModel
 {
-  /**
-   *
-   * @param AmocrmModel $baseLink
-   * @param Collection|AmocrmModel $bindableLink
-   * @return LinkModel
-   * @throws AmoCRMApiException
-   * @throws AmoCRMMissedTokenException
-   * @throws AmoCRMoAuthApiException
-   * @throws InvalidArgumentException
-   */
-  public static function link(AmocrmModel $baseLink, Collection|AmocrmModel $bindableLink): LinkModel
+  public static function link(BaseModel $baseLink, Collection|BaseModel $bindableLink): LinkModel
   {
     /**
      * @var static $model
      */
-    $model = App::make(static::class);
+    $model = App::make(self::class);
 
-    /**
-     * @var AmocrmModel $instance
-     */
     $baseLinkClass = get_class($baseLink);
     $links = new LinksCollection();
 
@@ -47,7 +30,7 @@ class LinkModel extends AmocrmModel
         } else {
           $links->add($bindableLink->sdkModel);
         }
-        $link = $baseLink->apiClient->apiClientSDK->contacts()->link($baseLink->sdkModel, $links);
+        $link = $baseLink->apiClient->client->contacts()->link($baseLink->sdkModel, $links);
         break;
       case LeadModel::class:
         if ($bindableLink instanceof Collection) {
@@ -57,7 +40,7 @@ class LinkModel extends AmocrmModel
         } else {
           $links->add($bindableLink->sdkModel);
         }
-        $link = $baseLink->apiClient->apiClientSDK->leads()->link($baseLink->sdkModel, $links);
+        $link = $baseLink->apiClient->client->leads()->link($baseLink->sdkModel, $links);
         break;
       default:
         break;

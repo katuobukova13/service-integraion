@@ -5,43 +5,51 @@ namespace App\Services\Integration;
 use AmoCRM\Exceptions\AmoCRMApiException;
 use AmoCRM\Exceptions\AmoCRMMissedTokenException;
 use AmoCRM\Exceptions\AmoCRMoAuthApiException;
+use App\Modules\Integration\Domain\Amocrm\AmocrmSamplingClause;
 use App\Modules\Integration\Domain\Amocrm\Lead\LeadModel as AmocrmLead;
 use Exception;
-use JetBrains\PhpStorm\ArrayShape;
+use Illuminate\Support\Collection;
 
 class AmocrmLeadService
 {
   /**
    * @param string $title
-   * @param int $price
+   * @param int|null $price
    * @param int|null $groupId
    * @param int|null $sourceId
    * @param string|null $payDate
-   * @param int|null $order
+   * @param string|null $city
+   * @param int|null $orderId
+   * @param int|null $orderNum
    * @param string|null $integrator
    * @param int|null $responsibleUserId
    * @return array
+   * @throws Exception
    */
   public function create(
     string $title,
-    int  $price,
-    int  $groupId = null,
-    int $sourceId = null,
+    int    $price = null,
+    int    $groupId = null,
+    int    $sourceId = null,
     string $payDate = null,
-    int $order = null,
+    string $city = null,
+    int    $orderId = null,
+    int    $orderNum = null,
     string $integrator = null,
-    int $responsibleUserId = null,
+    int    $responsibleUserId = null,
   ): array
   {
     $lead = AmocrmLead::create([
       'name' => $title,
       'price' => $price,
       'group_id' => $groupId,
+      'city' => $city,
       'responsible_user_id' => $responsibleUserId,
       'source_id' => $sourceId,
-      'cf_pay_date' => $payDate,
-      'cf_order' => $order,
-      'cf_integrator' => $integrator,
+      'pay_date' => $payDate,
+      'order_id' => $orderId,
+      'order_num' => $orderNum,
+      'integrator' => 'Advance Integration Service v1.0',
     ]);
 
     return $lead->attributes;
@@ -50,6 +58,7 @@ class AmocrmLeadService
   /**
    * @param int $id
    * @return array
+   * @throws Exception
    */
   public function find(int $id): array
   {
@@ -62,18 +71,21 @@ class AmocrmLeadService
    * @throws AmoCRMApiException
    * @throws AmoCRMoAuthApiException
    * @throws AmoCRMMissedTokenException
+   * @throws Exception
    */
 
   public function update(
     int    $id,
-    string $title = null,
-    int  $price = null,
-    int  $groupId = null,
-    int $sourceId = null,
-    string $payDate = null,
-    int $order = null,
     string $integrator = null,
-    int $responsibleUserId = null,
+    string $title = null,
+    int    $price = null,
+    int    $groupId = null,
+    int    $sourceId = null,
+    string $payDate = null,
+    string $city = null,
+    int    $orderId = null,
+    int    $orderNum = null,
+    int    $responsibleUserId = null,
   ): array
   {
     $lead = AmocrmLead::find($id);
@@ -82,11 +94,13 @@ class AmocrmLeadService
       'name' => $title,
       'price' => $price,
       'group_id' => $groupId,
+      'city' => $city,
       'responsible_user_id' => $responsibleUserId,
       'source_id' => $sourceId,
-      'cf_pay_date' => $payDate,
-      'cf_order' => $order,
-      'cf_integrator' => $integrator,
+      'pay_date' => $payDate,
+      'order_id' => $orderId,
+      'order_num' => $orderNum,
+      'integrator' => 'Advance Integration Service v1.0',
     ]);
 
     $leadUpdated = AmocrmLead::find($lead->attributes['id']);
@@ -97,17 +111,20 @@ class AmocrmLeadService
   /**
    * @throws Exception
    */
-
-  #[ArrayShape(['leads' => "\Illuminate\Support\Collection"])]
   public function list(
     array $with = [],
     array $filter = [],
-    int $page = null,
-    int $limit = null,
-  ): array
+    int   $page = 1,
+    int   $limit = 50,
+  ): Collection
   {
-    $collection = AmocrmLead::list(with: $with, filter: $filter, page: $page, limit: $limit);
-
-    return ['leads' => $collection];
+    return AmocrmLead::list(
+      new AmocrmSamplingClause(
+        with: $with,
+        page: $page,
+        limit: $limit,
+        filter: $filter
+      )
+    );
   }
 }

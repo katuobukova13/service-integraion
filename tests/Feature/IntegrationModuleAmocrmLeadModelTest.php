@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use AmoCRM\Exceptions\AmoCRMApiException;
 use AmoCRM\Exceptions\AmoCRMMissedTokenException;
 use AmoCRM\Exceptions\AmoCRMoAuthApiException;
+use App\Modules\Integration\Domain\Amocrm\AmocrmSamplingClause;
 use App\Modules\Integration\Domain\Amocrm\Lead\LeadModel;
 use Exception;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -20,7 +21,7 @@ class IntegrationModuleAmocrmLeadModelTest extends TestCase
     $title = $this->faker->text(10);
     $payDate = $this->faker->date;
 
-    $model = LeadModel::create(["name" => $title, "cf_pay_date" => $payDate]);
+    $model = LeadModel::create(["name" => $title, "pay_date" => $payDate]);
 
     $lead = LeadModel::find($model->attributes['id']);
 
@@ -33,12 +34,11 @@ class IntegrationModuleAmocrmLeadModelTest extends TestCase
     $title = $this->faker->text(10);
     $payDate = $this->faker->date('d.m.Y');
 
-    $model = LeadModel::create(["name" => $title, "cf_pay_date" => $payDate]);
+    $model = LeadModel::create(["name" => $title, "pay_date" => $payDate]);
 
     $this->assertInstanceOf('App\Modules\Integration\Domain\Amocrm\Lead\LeadModel', $model);
     $this->assertEquals($title, $model->attributes['name']);
-    $this->assertEquals($model->attributes["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.leads.pay_date'));
-    $this->assertEquals($payDate, $model->attributes["custom_fields_values"][0]['values'][0]['value']->format('d.m.Y'));
+    $this->assertEquals($model->attributes['pay_date'], $payDate);
   }
 
   /**
@@ -54,21 +54,20 @@ class IntegrationModuleAmocrmLeadModelTest extends TestCase
     $titleUpdate = $this->faker->title;
     $payDateUpdate = $this->faker->date('d.m.Y');
 
-    $model = LeadModel::create(["name" => $title, "cf_pay_date" => $payDate]);
+    $model = LeadModel::create(["name" => $title, "pay_date" => $payDate]);
 
     $lead = LeadModel::find($model->attributes['id']);
 
     $lead->update([
       'name' => $titleUpdate,
-      'cf_pay_date' => $payDateUpdate
+      'pay_date' => $payDateUpdate
     ]);
 
     $lead = LeadModel::find($model->attributes['id']);
 
     $this->assertInstanceOf(LeadModel::class, $lead);
     $this->assertEquals($titleUpdate, $lead->attributes['name']);
-    $this->assertEquals($lead->attributes["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.leads.pay_date'));
-    $this->assertEquals($payDateUpdate, $lead->attributes["custom_fields_values"][0]['values'][0]['value']->timezone('Europe/Moscow')->format('d.m.Y'));
+    $this->assertEquals($lead->attributes['pay_date'], $payDateUpdate);
   }
 
   /**
@@ -83,7 +82,8 @@ class IntegrationModuleAmocrmLeadModelTest extends TestCase
     $model1 = LeadModel::create(["name" => $title, "price" => $price1]);
     $model2 = LeadModel::create(["name" => $title, "price" => $price2]);
 
-    $listFilter = LeadModel::list(filter: ['id' => [$model1->attributes['id'], $model2->attributes['id']]]);
+    $listFilter = LeadModel::list(new AmocrmSamplingClause(filter: ['id' => [$model1->attributes['id'],
+      $model2->attributes['id']]]));
 
     $this->assertInstanceOf(Collection::class, $listFilter);
     $this->assertEquals($listFilter[0]->attributes['id'], $model1->attributes['id']);
@@ -95,7 +95,7 @@ class IntegrationModuleAmocrmLeadModelTest extends TestCase
    */
   public function testListLimit()
   {
-    $listLimit = LeadModel::list(limit: 2);
+    $listLimit = LeadModel::list(new AmocrmSamplingClause(limit: 2));
 
     $this->assertInstanceOf(Collection::class, $listLimit);
     $this->assertEquals(2, $listLimit->count());
@@ -106,16 +106,7 @@ class IntegrationModuleAmocrmLeadModelTest extends TestCase
    */
   public function testListPage()
   {
-    $listPage = LeadModel::list(page: 1);
+    $listPage = LeadModel::list(new AmocrmSamplingClause(page: 1));
     $this->assertInstanceOf(Collection::class, $listPage);
-  }
-
-  /**
-   * @throws Exception
-   */
-  public function testListWithContacts()
-  {
-    $listWith = LeadModel::list(with: ['contacts']);
-    $this->assertInstanceOf(Collection::class, $listWith);
   }
 }

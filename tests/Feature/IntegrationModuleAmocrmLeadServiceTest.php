@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Services\Integration\AmocrmLeadService;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\App;
 use Tests\TestCase;
@@ -28,8 +29,7 @@ class IntegrationModuleAmocrmLeadServiceTest extends TestCase
     $this->assertIsArray($lead);
     $this->assertEquals($lead['name'], $title);
     $this->assertEquals($price, $lead['price']);
-    $this->assertEquals($lead["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.leads.pay_date'));
-    $this->assertEquals($payDate, $lead["custom_fields_values"][0]['values'][0]['value']->format('d.m.Y'));
+    $this->assertEquals($lead['pay_date'], $payDate);
   }
 
   public function testFind(): void
@@ -78,6 +78,9 @@ class IntegrationModuleAmocrmLeadServiceTest extends TestCase
     $this->assertEquals($priceNew, $leadUpdated['price']);
   }
 
+  /**
+   * @throws BindingResolutionException
+   */
   public function testListFilter(): void
   {
     $title = $this->faker->text(30);
@@ -103,35 +106,33 @@ class IntegrationModuleAmocrmLeadServiceTest extends TestCase
     $listFilter = $amocrmLeadService->list(filter: ['id' => [
       $lead1['id'], $lead2['id']]]);
 
-    $this->assertIsArray($listFilter);
-    $this->assertEquals(2, $listFilter['leads']->count());
-    $this->assertEquals($lead1['id'], $listFilter['leads'][0]->attributes['id']);
-    $this->assertEquals($lead2['id'], $listFilter['leads'][1]->attributes['id']);
+    $this->assertIsArray($listFilter->all());
+    $this->assertEquals(2, $listFilter->count());
+    $this->assertEquals($lead1['id'], $listFilter[0]->attributes['id']);
+    $this->assertEquals($lead2['id'], $listFilter[1]->attributes['id']);
   }
 
+  /**
+   * @throws BindingResolutionException
+   */
   public function testListLimit()
   {
     $amocrmLeadService = $this->app->make(AmocrmLeadService::class);
 
     $listLimit = $amocrmLeadService->list(limit: 5);
 
-    $this->assertIsArray($listLimit);
-    $this->assertEquals(5, $listLimit['leads']->count());
+    $this->assertIsArray($listLimit->all());
+    $this->assertCount(5, $listLimit->all());
   }
 
+  /**
+   * @throws BindingResolutionException
+   */
   public function testListPage()
   {
     $amocrmLeadService = $this->app->make(AmocrmLeadService::class);
 
     $listPage = $amocrmLeadService->list(page: 1);
-    $this->assertIsArray($listPage);
-  }
-
-  public function testListWith()
-  {
-    $amocrmLeadService = $this->app->make(AmocrmLeadService::class);
-
-    $listWith = $amocrmLeadService->list(with: ['leads']);
-    $this->assertIsArray($listWith);
+    $this->assertIsArray($listPage->all());
   }
 }

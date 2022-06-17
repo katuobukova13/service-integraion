@@ -4,7 +4,7 @@ namespace App\Modules\Integration\Core\Facades;
 
 abstract class BaseModel
 {
-  public array $attributes = [];
+  public readonly array $attributes;
 
   public function setAttributes(array $attributes): static
   {

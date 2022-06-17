@@ -13,36 +13,33 @@ class IntegrationModuleAmocrmLeadControllerTest extends TestCase
   public function testStore(): void
   {
     $title = $this->faker->text(15);
-    $payDate = $this->faker->date();
+    $payDate = $this->faker->date('d.m.Y');
     $price = $this->faker->numberBetween(100, 7300);
 
-    $response = $this->post('/api/amocrm/leads', [
+    $response = $this->post('/api/v1/amocrm/leads', [
       'title' => $title,
       'pay_date' => $payDate,
       'price' => $price,
     ]);
 
     $this->assertEquals($response['name'], $title);
-    $this->assertEquals($response["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.leads.pay_date'));
-    $this->assertEquals($payDate, substr($response["custom_fields_values"][0]['values'][0]['value'], 0, 10));
+    $this->assertEquals($response['pay_date'], $payDate);
     $this->assertEquals($response['price'], $price);
   }
 
   public function testShow(): void
   {
     $title = $this->faker->text(15);
-    $payDate = $this->faker->date();
     $price = $this->faker->numberBetween(100, 7300);
 
-    $response = $this->post('/api/amocrm/leads', [
+    $response = $this->post('/api/v1/amocrm/leads', [
       'title' => $title,
-      'pay_date' => $payDate,
       'price' => $price,
     ]);
 
     $id = $response['id'];
 
-    $lead = $this->get('/api/amocrm/leads/' . $id);
+    $lead = $this->get('/api/v1/amocrm/leads/' . $id);
 
     $this->assertEquals($response['id'], $lead['id']);
   }
@@ -54,7 +51,7 @@ class IntegrationModuleAmocrmLeadControllerTest extends TestCase
     $price = $this->faker->numberBetween(100, 7300);
     $titleUpdated = $this->faker->text(5);
 
-    $response = $this->post('/api/amocrm/leads', [
+    $response = $this->post('/api/v1/amocrm/leads', [
       'title' => $title,
       'pay_date' => $payDate,
       'price' => $price,
@@ -62,7 +59,7 @@ class IntegrationModuleAmocrmLeadControllerTest extends TestCase
 
     $id = $response['id'];
 
-    $lead = $this->put('/api/amocrm/leads/' . $id, [
+    $lead = $this->put('/api/v1/amocrm/leads/' . $id, [
         'title' => $titleUpdated,
       ]
     );
@@ -73,28 +70,25 @@ class IntegrationModuleAmocrmLeadControllerTest extends TestCase
 
   public function testListFilter(): void
   {
-    $payDate = $this->faker->date(format: 'd.m.Y');
+    $payDate = $this->faker->date('d.m.Y');
     $price = $this->faker->numberBetween(100, 7300);
     $title1 = $this->faker->text(15);
     $title2 = $this->faker->text(15);
     $title3 = $this->faker->text(15);
 
-    $lead1 = $this->post('/api/amocrm/leads', [
+    $lead1 = $this->post('/api/v1/amocrm/leads', [
       'title' => $title1,
-      'pay_date' => $payDate,
       'price' => $price,
     ]);
 
-    $lead2 = $this->post('/api/amocrm/leads', [
+    $lead2 = $this->post('/api/v1/amocrm/leads', [
       'title' => $title2,
-      'pay_date' => $payDate,
       'price' => $price,
     ]);
 
 
-    $lead3 = $this->post('/api/amocrm/leads', [
+    $lead3 = $this->post('/api/v1/amocrm/leads', [
       'title' => $title3,
-      'pay_date' => $payDate,
       'price' => $price,
     ]);
 
@@ -106,10 +100,10 @@ class IntegrationModuleAmocrmLeadControllerTest extends TestCase
         $lead3['id']]]
       ]));
 
-    $this->assertCount(3, $listFilter['leads']);
-    $this->assertContains($lead1['id'], $listFilter['leads'][0]['attributes']);
-    $this->assertContains($lead2['id'], $listFilter['leads'][1]['attributes']);
-    $this->assertContains($lead3['id'], $listFilter['leads'][2]['attributes']);
+    $this->assertCount(3, $listFilter->json());
+    $this->assertContains($lead1['id'], $listFilter[0]);
+    $this->assertContains($lead2['id'], $listFilter[1]);
+    $this->assertContains($lead3['id'], $listFilter[2]);
   }
 
   public function testListLimit()
@@ -118,7 +112,7 @@ class IntegrationModuleAmocrmLeadControllerTest extends TestCase
       [AmocrmLeadController::class, 'index'],
       ['limit' => 2]));
 
-    $this->assertCount(2, $listLimit['leads']);
+    $this->assertCount(2, $listLimit->json());
   }
 
   public function testListPage()
@@ -127,15 +121,6 @@ class IntegrationModuleAmocrmLeadControllerTest extends TestCase
       [AmocrmLeadController::class, 'index'],
       ['page' => 1]));
 
-    $this->assertIsArray($listPage['leads']);
-  }
-
-  public function testListWith()
-  {
-    $listWith = $this->get(action(
-      [AmocrmLeadController::class, 'index'],
-      ['with' => 'contacts']));
-
-    $this->assertIsArray($listWith['leads']);
+    $this->assertIsArray($listPage->json());
   }
 }

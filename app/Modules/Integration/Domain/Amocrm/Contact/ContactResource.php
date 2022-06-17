@@ -2,7 +2,7 @@
 
 namespace App\Modules\Integration\Domain\Amocrm\Contact;
 
-use App\Modules\Integration\Core\Concerns\ResourceDataType;
+use App\Modules\Integration\Core\Concerns\DataType;
 use App\Modules\Integration\Domain\Amocrm\AmocrmResource;
 
 class ContactResource extends AmocrmResource
@@ -12,7 +12,7 @@ class ContactResource extends AmocrmResource
     return self::buildUrl(parent::endpoint(), 'contacts');
   }
 
-  function dataType(): ResourceDataType
+  function dataType(): DataType
   {
     return parent::dataType();
   }

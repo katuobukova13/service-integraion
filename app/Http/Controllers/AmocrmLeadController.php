@@ -5,32 +5,35 @@ namespace App\Http\Controllers;
 use AmoCRM\Exceptions\AmoCRMApiException;
 use AmoCRM\Exceptions\AmoCRMMissedTokenException;
 use AmoCRM\Exceptions\AmoCRMoAuthApiException;
-use App\Http\Requests\LeadRequest;
+use App\Http\Requests\Amocrm\Lead\LeadIndexRequest;
+use App\Http\Requests\Amocrm\Lead\LeadStoreRequest;
+use App\Http\Requests\Amocrm\Lead\LeadUpdateRequest;
 use App\Services\Integration\AmocrmLeadService;
 use Exception;
-use JetBrains\PhpStorm\ArrayShape;
+use Illuminate\Support\Collection;
 
 class AmocrmLeadController extends Controller
 {
   /**
-   * @param LeadRequest $request
+   * @param LeadStoreRequest $request
    * @param AmocrmLeadService $leadService
    * @return array
+   * @throws Exception
    */
-
-  #[ArrayShape(['lead' => "\App\Modules\Integration\Domain\Amocrm\Lead\LeadModel"])]
-  public function store(LeadRequest $request, AmocrmLeadService $leadService): array
+  public function store(LeadStoreRequest $request, AmocrmLeadService $leadService): array
   {
-    $attributes = $request->validated();
+    $attributes = $request->all();
 
     return $leadService->create(
       title: $attributes['title'],
-      price: $attributes['price'],
+      price: $attributes['price'] ?? null,
       groupId: $attributes['group_id'] ?? null,
       sourceId: $attributes['source_id'] ?? null,
       payDate: $attributes['pay_date'] ?? null,
-      order: $attributes['order'] ?? null,
-      integrator: $attributes['integrator'] ?? null,
+      city: $attributes['city'] ?? null,
+      orderId: $attributes['order_id'] ?? null,
+      orderNum: $attributes['order_num'] ?? null,
+      integrator: $attributes['integrator'] ?? '',
       responsibleUserId: $attributes['responsible_user_id'] ?? null,
     );
   }
@@ -40,31 +43,25 @@ class AmocrmLeadController extends Controller
    * @throws AmoCRMoAuthApiException
    * @throws AmoCRMMissedTokenException
    */
-  #[ArrayShape(['lead' => "\App\Modules\Integration\Domain\Amocrm\Lead\LeadModel"])]
-  public function update(LeadRequest $request, AmocrmLeadService $leadService, int $id): array
+  public function update(LeadUpdateRequest $request, AmocrmLeadService $leadService, int $id): array
   {
-    $attributes = $request->validated();
+    $attributes = $request->all();
 
     return $leadService->update(
       id: $id,
+      integrator: $attributes['integrator'] ?? null,
       title: $attributes['title'] ?? null,
       price: $attributes['price'] ?? null,
       groupId: $attributes['group_id'] ?? null,
       sourceId: $attributes['source_id'] ?? null,
       payDate: $attributes['pay_date'] ?? null,
-      order: $attributes['order'] ?? null,
-      integrator: $attributes['integrator'] ?? null,
+      city: $attributes['city'] ?? null,
+      orderId: $attributes['order_id'] ?? null,
+      orderNum: $attributes['order_num'] ?? null,
       responsibleUserId: $attributes['responsible_user_id'] ?? null,
     );
   }
 
-
-  /**
-   * @throws AmoCRMoAuthApiException
-   * @throws AmoCRMApiException
-   * @throws AmoCRMMissedTokenException
-   */
-  #[ArrayShape(['lead' => "array"])]
   public function show(AmocrmLeadService $leadService, int $id): array
   {
     return $leadService->find($id);
@@ -73,15 +70,15 @@ class AmocrmLeadController extends Controller
   /**
    * @throws Exception
    */
-  #[ArrayShape(['leads' => "\App\Modules\Integration\Domain\Amocrm\Lead\LeadModel[]|\Illuminate\Support\Collection"])]
-  public function index(LeadRequest $request, AmocrmLeadService $leadService): array
+  public function index(LeadIndexRequest $request, AmocrmLeadService $leadService): Collection
   {
     $attributes = $request->validated();
 
     return $leadService->list(
       with: $attributes['with'] ?? [],
       filter: $attributes['filter'] ?? [],
-      page: $attributes['page'] ?? null,
-      limit: $attributes['limit'] ?? null);
+      page: $attributes['page'] ?? 1,
+      limit: $attributes['limit'] ?? 50,
+    )->map(fn($leadModel) => $leadModel->attributes);
   }
 }

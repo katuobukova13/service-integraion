@@ -2,14 +2,14 @@
 
 namespace App\Modules\Integration\Domain\Getcourse;
 
-use App\Modules\Integration\Core\Concerns\ResourceDataType;
-use App\Modules\Integration\Core\Concerns\ResourceRequestOptions;
+use App\Modules\Integration\Core\Concerns\DataType;
+use App\Modules\Integration\Core\Facades\RequestOptions;
 use App\Modules\Integration\Core\Facades\Resource;
 use League\Flysystem\Exception;
 
 class GetcourseResource extends Resource
 {
-  public function fetch(string $url = '', ResourceRequestOptions $options = new ResourceRequestOptions): mixed
+  public function fetch(string $url = '', RequestOptions $options = new RequestOptions): mixed
   {
     $secretKey = config('services.getcourse.advance.secret_key');
 
@@ -17,14 +17,17 @@ class GetcourseResource extends Resource
       throw new Exception('Invalid secret key');
     }
 
-    return parent::fetch($url, new ResourceRequestOptions(
-      method: $options->getMethod(),
-      headers: collect($options->getHeaders())->merge(['Accept' => 'application/json'])->all(),
-      body: collect($options->getBody())->merge(['key' => $secretKey,])->all(),
-      bodyFormat: $options->getBodyFormat()
+    return parent::fetch($url, new RequestOptions(
+      method: $options->method,
+      headers: collect($options->headers)->merge(['Accept' => 'application/json'])->all(),
+      body: collect($options->body)->merge(['key' => $secretKey,])->all(),
+      bodyFormat: $options->bodyFormat
     ));
   }
 
+  /**
+   * @throws Exception
+   */
   public function endpoint(): string
   {
     $hostname = config('services.getcourse.advance.hostname');
@@ -36,8 +39,8 @@ class GetcourseResource extends Resource
     return "https://$hostname/pl/api";
   }
 
-  protected function dataType(): ResourceDataType
+  public function dataType(): DataType
   {
-    return ResourceDataType::JSON;
+    return DataType::JSON;
   }
 }

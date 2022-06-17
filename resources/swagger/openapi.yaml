@@ -1,0 +1,1176 @@
+openapi: 3.0.3
+info:
+  title: INTEGRATION SERVICE API
+  version: 1.0.0
+paths:
+
+  /api/v1/getcourse/deal:
+    post:
+      tags:
+        - Сделки GetCourse
+      description: Создание сделки GetCourse
+      parameters:
+        - name: email
+          in: query
+          description: email юзера для прикрепления сделки
+          required: true
+          schema:
+            type: string
+        - name: title
+          in: query
+          description: название сделки
+          required: true
+          schema:
+            type: string
+        - name: quantity
+          in: query
+          description: количество
+          schema:
+            type: number
+        - name: cost
+          in: query
+          description: стоимость
+          schema:
+            type: number
+        - name: status
+          in: query
+          description: статус сделки
+          schema:
+            type: string
+            enum:
+              - new
+              - payed
+              - cancelled
+              - 'false'
+              - in_work
+              - payment_waiting
+              - part_payed
+              - waiting_for_return
+              - not_confirmed
+              - pending
+        - name: manager_email
+          in: query
+          description: email менеджера
+          schema:
+            type: string
+        - name: is_paid
+          in: query
+          description: оплачено
+          schema:
+            type: string
+            enum:
+              - да
+              - нет
+        - name: comment
+          in: query
+          description: комментарий
+          schema:
+            type: string
+        - name: payment_type
+          in: query
+          description: тип оплаты
+          schema:
+            type: string
+            enum:
+              - 2CO
+              - ALFA
+              - BILL
+              - CARD
+              - CARD_TERMINAL
+              - CASH
+              - cloud_payments
+              - cloud_payments_kz
+              - fondy
+              - hutki_grosh
+              - interkassa
+              - INTERNAL
+              - justclick
+              - kvit
+              - OTHER
+              - payanyway
+              - PAYPAL
+              - perfect_money
+              - PERFECTMONEY
+              - QIWI
+              - qiwi_kassa
+              - QUICKTRANSFER
+              - RBK
+              - rbkmoney
+              - rbkmoney_new
+              - ROBOKASSA
+              - SBER
+              - sberbank
+              - tinkoff
+              - tinkoffcredit
+              - VIRTUAL
+              - walletone
+              - wayforpay
+              - WEBMONEY
+              - yandex_kass
+              - YANDEXMONEY
+              - ZPAYMENT
+              - prodamus
+              - ebanx
+              - swedbank
+        - name: payment_status
+          in: query
+          description: статус оплаты
+          schema:
+            type: string
+            enum:
+              - expected
+              - accepted
+              - returned
+              - tobalance
+              - frombalance
+              - returned_to_balance
+        - name: currency
+          in: query
+          description: валюта
+          schema:
+            type: string
+            enum:
+              - RUB
+              - USD
+              - EUR
+              - GBP
+              - BYR
+              - BYN
+              - KZT
+              - UAH
+              - AUD
+              - DKK
+              - CHF
+              - SEK
+              - ZAR
+              - AMD
+              - RON
+              - BRL
+              - ILS
+              - MYR
+              - SGD
+              - KGS
+              - CAD
+              - MXN
+              - JPY
+              - UZS
+        - name: token
+          in: query
+          description: токен для авторизации в приложении
+      security:
+        - api_key: [ ]
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetCourseDealsPostResponse'
+  /api/v1/getcourse/user:
+    post:
+      tags:
+        - Пользователи GetCourse
+      description: Создание сделки GetCourse
+      parameters:
+        - name: email
+          in: query
+          description: email юзера для создания/обновления
+          required: true
+          schema:
+            type: string
+        - name: phone
+          in: query
+          description: номер телефона
+          schema:
+            type: string
+        - name: first_name
+          in: query
+          description: имя
+          schema:
+            type: string
+        - name: last_name
+          in: query
+          description: фамилия
+          schema:
+            type: string
+        - name: city
+          in: query
+          description: город
+          schema:
+            type: string
+        - name: country
+          in: query
+          description: город
+          schema:
+            type: string
+        - name: group[]
+          in: query
+          description: добавить в группу
+          schema:
+            type: array
+            items:
+              type: string
+        - name: token
+          in: query
+          description: токен для авторизации в приложении
+      security:
+        - api_key: [ ]
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetCourseUsersPostResponse'
+  /api/v1/amocrm/contacts:
+    post:
+      tags:
+        - Пользователи Amocrm
+      description: Создание пользователя в Amocrm
+      parameters:
+        - name: emails[]
+          in: query
+          description: email/emails контакта
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+        - name: phones[]
+          in: query
+          description: телефон/телефоны контакта
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+        - name: first_name
+          in: query
+          description: имя контакта
+          required: true
+          schema:
+            type: string
+        - name: last_name
+          in: query
+          description: фамилия контакта
+          required: true
+          schema:
+            type: string
+        - name: city
+          in: query
+          description: город
+          schema:
+            type: string
+        - name: country
+          in: query
+          description: страна
+          schema:
+            type: string
+        - name: responsible_user_id
+          in: query
+          description: id ответственного
+          schema:
+            type: integer
+        - name: position
+          in: query
+          description: должность
+          schema:
+            type: string
+        - name: partner
+          in: query
+          description: партнер
+          schema:
+            type: string
+        - name: token
+          in: query
+          description: токен для авторизации в приложении
+      security:
+        - api_key: [ ]
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmocrmUsersResponse'
+    get:
+      tags:
+        - Пользователи Amocrm
+      description: Список пользователей Amocrm с фильтрами/без
+      parameters:
+        - name: page
+          in: query
+          description: страница
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          description: количество пользователей
+          schema:
+            type: integer
+        - name: filter[id][]
+          in: query
+          description: фильтр по id
+          schema:
+            type: array
+            items:
+              type: integer
+        - name: filter[name][]
+          in: query
+          description: фильтр по имени (имя и фамилия)
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filter[emails][]
+          in: query
+          description: фильтр по еmail
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filter[phones][]
+          in: query
+          description: фильтр по телефонам
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filter[сity][]
+          in: query
+          description: фильтр по городу
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filter[country][]
+          in: query
+          description: фильтр по стране
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filter[position][]
+          in: query
+          description: фильтр по должности
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filter[partner][]
+          in: query
+          description: фильтр по партнеру
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filter[responsible_user_id][]
+          in: query
+          description: фильтр по ответственному
+          schema:
+            type: array
+            items:
+              type: integer
+        - name: token
+          in: query
+          description: токен для авторизации в приложении
+      security:
+        - api_key: [ ]
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmocrmUsersGetResponse'
+  /api/v1/amocrm/contacts/{id}:
+    get:
+      tags:
+        - Пользователи Amocrm
+      description: Найти пользователя в Amocrm
+      parameters:
+        - name: id
+          in: path
+          required: true
+        - name: token
+          in: query
+          description: токен для авторизации в приложении
+      security:
+        - api_key: [ ]
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmocrmUsersResponse'
+    put:
+      tags:
+        - Пользователи Amocrm
+      description: Обновить данные пользователя в Amocrm
+      parameters:
+        - name: id
+          in: path
+          required: true
+        - name: emails[]
+          in: query
+          description: email/emails контакта
+          schema:
+            type: array
+            items:
+              type: string
+        - name: phones[]
+          in: query
+          description: телефон/телефоны контакта
+          schema:
+            type: array
+            items:
+              type: string
+        - name: first_name
+          in: query
+          description: имя контакта
+          schema:
+            type: string
+        - name: last_name
+          in: query
+          description: фамилия контакта
+          schema:
+            type: string
+        - name: city
+          in: query
+          description: город
+          schema:
+            type: string
+        - name: country
+          in: query
+          description: страна
+          schema:
+            type: string
+        - name: responsible_user_id
+          in: query
+          description: id ответственного
+          schema:
+            type: integer
+        - name: position
+          in: query
+          description: должность
+          schema:
+            type: string
+        - name: partner
+          in: query
+          description: партнер
+          schema:
+            type: string
+        - name: token
+          in: query
+          description: токен для авторизации в приложении
+      security:
+        - api_key: [ ]
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmocrmUsersResponse'
+  /api/v1/amocrm/leads:
+    post:
+      tags:
+        - Сделки Amocrm
+      description: Создание сделки в Amocrm
+      parameters:
+        - name: title
+          in: query
+          description: название сделки
+          required: true
+          schema:
+            type: string
+        - name: price
+          in: query
+          description: цена
+          schema:
+            type: integer
+        - name: group_id
+          in: query
+          description: id группы
+          schema:
+            type: integer
+        - name: pay_date
+          in: query
+          description: дата оплаты
+          schema:
+            type: string
+        - name: city
+          in: query
+          description: город
+          schema:
+            type: string
+        - name: responsible_user_id
+          in: query
+          description: id ответственного
+          schema:
+            type: integer
+        - name: source_id
+          in: query
+          description: id источника
+          schema:
+            type: integer
+        - name: order_id
+          in: query
+          description: id заказа Getcourse
+          schema:
+            type: integer
+        - name: order_num
+          in: query
+          description: номер заказа Getcourse
+          schema:
+            type: integer
+        - name: token
+          in: query
+          description: токен для авторизации в приложении
+      security:
+        - api_key: [ ]
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmocrmDealsResponse'
+    get:
+      tags:
+        - Сделки Amocrm
+      description: Список сделок Amocrm с фильтрами/без
+      parameters:
+        - name: page
+          in: query
+          description: страница
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          description: количество сделок
+          schema:
+            type: integer
+        - name: filter[id][]
+          in: query
+          description: фильтр по id
+          schema:
+            type: array
+            items:
+              type: integer
+        - name: filter[name][]
+          in: query
+          description: фильтр по названию
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filter[pay_date][from]
+          in: query
+          description: фильтр по дате сделки
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filter[pay_date][to]
+          in: query
+          description: фильтр по дате сделки
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filter[price][from]
+          in: query
+          description: фильтр по цене c ...
+          schema:
+            type: array
+            items:
+              type: integer
+        - name: filter[price][to]
+          in: query
+          description: фильтр по цене до ...
+          schema:
+            type: array
+            items:
+              type: integer
+        - name: filter[сity][]
+          in: query
+          description: фильтр по городу
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filter[country][]
+          in: query
+          description: фильтр по стране
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filter[partner][]
+          in: query
+          description: фильтр по партнеру
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filter[responsible_user_id][]
+          in: query
+          description: фильтр по ответственному
+          schema:
+            type: array
+            items:
+              type: integer
+        - name: token
+          in: query
+          description: токен для авторизации в приложении
+      security:
+        - api_key: [ ]
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmocrmDealsGetResponse'
+  /api/v1/amocrm/leads/{id}:
+    get:
+      tags:
+        - Сделки Amocrm
+      description: Найти сделку в Amocrm
+      parameters:
+        - name: id
+          in: path
+          required: true
+        - name: token
+          in: query
+          description: токен для авторизации в приложении
+      security:
+        - api_key: [ ]
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmocrmDealsResponse'
+    put:
+      tags:
+        - Сделки Amocrm
+      description: Обновить данные сделки в Amocrm
+      parameters:
+        - name: id
+          in: path
+          required: true
+        - name: title
+          in: query
+          description: название сделки
+          schema:
+            type: string
+        - name: price
+          in: query
+          description: цена
+          schema:
+            type: integer
+        - name: group_id
+          in: query
+          description: id группы
+          schema:
+            type: integer
+        - name: pay_date
+          in: query
+          description: дата оплаты
+          schema:
+            type: string
+        - name: city
+          in: query
+          description: город
+          schema:
+            type: string
+        - name: order_id
+          in: query
+          description: id заказа Getcourse
+          schema:
+            type: integer
+        - name: order_num
+          in: query
+          description: номер заказа Getcourse
+          schema:
+            type: integer
+        - name: responsible_user_id
+          in: query
+          description: id ответственного
+          schema:
+            type: integer
+        - name: source_id
+          in: query
+          description: id источника
+          schema:
+            type: integer
+        - name: token
+          in: query
+          description: токен для авторизации в приложении
+      security:
+        - api_key: [ ]
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmocrmDealsResponse'
+  /api/v1/amocrm/orders:
+    post:
+      tags:
+        - Заказ Amocrm
+      description: Создание заказа в Amocrm
+      parameters:
+        - name: emails[]
+          in: query
+          description: email/emails контакта
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+        - name: phones[]
+          in: query
+          description: телефон/телефоны контакта
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+        - name: first_name
+          in: query
+          description: имя контакта
+          required: true
+          schema:
+            type: string
+        - name: last_name
+          in: query
+          description: фамилия контакта
+          required: true
+          schema:
+            type: string
+        - name: title
+          in: query
+          description: название сделки
+          required: true
+          schema:
+            type: string
+        - name: country
+          in: query
+          description: страна
+          schema:
+            type: string
+        - name: position
+          in: query
+          description: должность
+          schema:
+            type: string
+        - name: partner
+          in: query
+          description: партнер
+          schema:
+            type: string
+        - name: price
+          in: query
+          description: цена
+          schema:
+            type: integer
+        - name: group_id
+          in: query
+          description: id группы
+          schema:
+            type: integer
+        - name: pay_date
+          in: query
+          description: дата оплаты
+          schema:
+            type: string
+        - name: city
+          in: query
+          description: город
+          schema:
+            type: string
+        - name: order_id
+          in: query
+          description: id заказа Getcourse
+          schema:
+            type: integer
+        - name: order_num
+          in: query
+          description: номер заказа Getcourse
+          schema:
+            type: integer
+        - name: responsible_user_id
+          in: query
+          description: id ответственного
+          schema:
+            type: integer
+        - name: source_id
+          in: query
+          description: id источника
+          schema:
+            type: integer
+        - name: token
+          in: query
+          description: токен для авторизации в приложении
+      security:
+        - api_key: [ ]
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmocrmOrdersResponse'
+components:
+  schemas:
+    GetCourseDealsPostResponse:
+      required:
+        - email
+        - title
+        - id
+      properties:
+        email:
+          type: string
+          example: test111111101@test.ru
+        title:
+          type: string
+          example: test
+        quantity:
+          type: number
+          example: '1'
+        cost:
+          type: number
+          example: '1'
+        status:
+          type: string
+          example: in_work
+        manager_email:
+          type: string
+          example: mgr01@mail.ru
+        is_paid:
+          type: string
+          example: нет
+        comment:
+          type: string
+          example: Комментарий
+        payment_type:
+          type: string
+          example: sberbank
+        payment_status:
+          type: string
+          example: tobalance
+        currency:
+          type: string
+          example: RUB
+        id:
+          type: integer
+          example: 848585
+      type: object
+    GetCourseUsersPostResponse:
+      required:
+        - email
+        - id
+      properties:
+        phone:
+          type: string
+          example: '0000000000'
+        first_name:
+          type: string
+          example: test
+        last_name:
+          type: string
+          example: testo
+        city:
+          type: string
+          example: moscow
+        country:
+          type: string
+          example: russia
+        email:
+          type: string
+          example: test111111101@test.ru
+        group:
+          type: array
+          items:
+            type: string
+        id:
+          type: integer
+          example: 848585
+      type: object
+    AmocrmDealsResponse:
+      required:
+        - title
+        - id
+      properties:
+        title:
+          type: string
+          example: test
+        id:
+          type: integer
+          example: 2939
+        price:
+          type: number
+          example: '1'
+        group_id:
+          type: number
+          example: '1'
+        city:
+          type: string
+          example: moscow
+        responsible_user_id:
+          type: integer
+          example: 6
+        source_id:
+          type: integer
+          example: 1
+        pay_date:
+          type: string
+          example: 20.09.2022
+        order_id:
+          type: integer
+          example: 74749
+        order_num:
+          type: integer
+          example: 09
+        integrator:
+          type: string
+          example: Advance Integration Service v1.0
+      type: object
+    AmocrmDealsGetResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          title:
+            type: string
+            example: test
+          id:
+            type: integer
+            example: 2939
+          price:
+            type: number
+            example: '1'
+          group_id:
+            type: number
+            example: '1'
+          city:
+            type: string
+            example: moscow
+          responsible_user_id:
+            type: integer
+            example: 6
+          source_id:
+            type: integer
+            example: 1
+          pay_date:
+            type: string
+            example: 20.09.2022
+          order_id:
+            type: integer
+            example: 74749
+          order_num:
+            type: integer
+            example: 09
+          integrator:
+            type: string
+            example: Advance Integration Service v1.0
+    AmocrmUsersResponse:
+      required:
+        - emails
+        - phones
+        - first_name
+        - last_name
+        - id
+      properties:
+        phones:
+          type: array
+          items:
+            type: string
+            example: "0000000000"
+        first_name:
+          type: string
+          example: test
+        last_name:
+          type: string
+          example: testo
+        emails:
+           type: array
+           items:
+             type: string
+             example: test@test.ru
+        city:
+          type: string
+          example: moscow
+        country:
+          type: string
+          example: russia
+        name:
+          type: string
+          example: test testo
+        id:
+          type: integer
+          example: 1669
+        position:
+          type: string
+          example: manager
+        responsible_user_id:
+          type: integer
+          example: 1669
+        partner:
+          type: string
+          example: mail
+      type: object
+    AmocrmUsersGetResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          phones:
+            type: array
+            items:
+              type: string
+              example: "0000000000"
+          first_name:
+            type: string
+            example: test
+          last_name:
+            type: string
+            example: testo
+          emails:
+            type: array
+            items:
+              type: string
+              example: test@test.ru
+          city:
+            type: string
+            example: moscow
+          country:
+            type: string
+            example: russia
+          name:
+            type: string
+            example: test testo
+          id:
+            type: integer
+            example: 1669
+          position:
+            type: string
+            example: manager
+          responsible_user_id:
+            type: integer
+            example: 1669
+          partner:
+            type: string
+            example: mail
+    AmocrmOrdersResponse:
+      required:
+        - contact
+        - lead
+        - link
+      properties:
+        contact:
+          type: object
+          properties:
+              phones:
+                type: array
+                items:
+                  type: string
+                  example: "0000000000"
+              first_name:
+                type: string
+                example: test
+              last_name:
+                type: string
+                example: testo
+              emails:
+                type: array
+                items:
+                  type: string
+                  example: test@test.ru
+              city:
+                type: string
+                example: moscow
+              country:
+                type: string
+                example: russia
+              name:
+                type: string
+                example: test testo
+              id:
+                type: integer
+                example: 1669
+              position:
+                type: string
+                example: manager
+              responsible_user_id:
+                type: integer
+                example: 1669
+              partner:
+                type: string
+                example: mail
+        lead:
+          type: object
+          properties:
+            title:
+              type: string
+              example: test
+            id:
+              type: integer
+              example: 2939
+            price:
+              type: number
+              example: '1'
+            group_id:
+              type: number
+              example: '1'
+            city:
+              type: string
+              example: moscow
+            responsible_user_id:
+              type: integer
+              example: 6
+            source_id:
+              type: integer
+              example: 1
+            pay_date:
+              type: string
+              example: 20.09.2022
+            order_id:
+              type: integer
+              example: 74749
+            order_num:
+              type: integer
+              example: 09
+            integrator:
+              type: string
+              example: Advance Integration Service v1.0
+        link:
+          type: object
+          properties:
+            entity_type:
+              type: string
+              example: null
+            entity_id:
+              type: integer
+              example: null
+            to_entity_type:
+              type: string
+              example: contacts
+            to_entity_id:
+              type: integer
+              example: 373838
+            metadata:
+              type: string
+              example: null
+      type: object
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: Authorization
+      in: header

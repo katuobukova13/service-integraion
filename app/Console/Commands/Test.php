@@ -2,18 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Modules\Integration\Core\Concerns\ResourceRequestBodyFormat;
-use App\Modules\Integration\Core\Concerns\ResourceRequestMethod;
-use App\Modules\Integration\Core\Concerns\ResourceRequestOptions;
-use App\Modules\Integration\Domain\Amocrm\AmocrmResource;
-use App\Modules\Integration\Domain\Amocrm\Contact\ContactResource;
 use App\Modules\Integration\Domain\Getcourse\Deal\DealModel;
-use App\Modules\Integration\Domain\Getcourse\GetcourseResource;
-use App\Modules\Integration\Domain\Getcourse\User\UserModel;
 use App\Modules\Integration\Domain\Getcourse\User\UserResource;
-use App\Services\Integration\GetcourseUserImportService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\App;
 
 class Test extends Command
 {

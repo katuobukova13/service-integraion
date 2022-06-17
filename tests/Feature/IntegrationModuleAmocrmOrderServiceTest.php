@@ -38,17 +38,15 @@ class IntegrationModuleAmocrmOrderServiceTest extends TestCase
     $this->assertEquals($order['contact']['first_name'], $contactFirstName);
     $this->assertEquals($order['contact']['last_name'], $contactLastName);
     $this->assertEquals($order['contact']['name'], $contactFirstName . ' ' . $contactLastName);
-    $this->assertEquals($order['contact']["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.contacts.email'));
-    $this->assertContains($contactEmail[0], $order['contact']["custom_fields_values"][0]['values'][0]);
-    $this->assertEquals($order['contact']["custom_fields_values"][1]['field_id'], config('services.amocrm.advance.custom_fields.contacts.phone'));
-    $this->assertContains($contactPhone[0], $order['contact']["custom_fields_values"][1]['values'][0]);
+    $this->assertEquals($contactEmail[0], $order['contact']['emails'][0]);
+    $this->assertEquals($order['contact']['phones'][0], $contactPhone[0]);
 
     $this->assertEquals($order['lead']['name'], $title);
     $this->assertEquals($order['lead']['price'], $price);
-    $this->assertEquals($payDate, $order['lead']["custom_fields_values"][0]['values'][0]['value']->format('d.m.Y'));
+    $this->assertEquals($payDate, $order['lead']['pay_date']);
 
-    $this->assertEquals("contacts", $order['link'][0]["to_entity_type"]);
-    $this->assertEquals($order['link'][0]["to_entity_id"], $order['contact']['id']);
+    $this->assertEquals("contacts", $order['link']["to_entity_type"]);
+    $this->assertEquals($order['link']["to_entity_id"], $order['contact']['id']);
   }
 
   public function testCreateWithDublicatedEmail(): void
@@ -69,8 +67,8 @@ class IntegrationModuleAmocrmOrderServiceTest extends TestCase
     $contact = $amocrmContactService->create(
       firstName: $contactFirstName,
       lastName: $contactLastName,
-      phone: $contactPhone,
-      email: $contactEmail);
+      phones: $contactPhone,
+      emails: $contactEmail);
 
     $amocrmOrderService = $this->app->make(AmocrmOrderService::class);
 
@@ -89,17 +87,15 @@ class IntegrationModuleAmocrmOrderServiceTest extends TestCase
     $this->assertEquals($contact['first_name'], $contactFirstName);
     $this->assertEquals($contact['last_name'], $contactLastName);
     $this->assertEquals($contact['name'], $contactFirstName . ' ' . $contactLastName);
-    $this->assertEquals($contact["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.contacts.email'));
-    $this->assertContains($contactEmail[0], $contact["custom_fields_values"][0]['values'][0]);
-    $this->assertEquals($contact["custom_fields_values"][1]['field_id'], config('services.amocrm.advance.custom_fields.contacts.phone'));
-    $this->assertContains($contactPhone[0], $contact["custom_fields_values"][1]['values'][0]);
+    $this->assertEquals($contact['emails'][0], $contactEmail[0]);
+    $this->assertEquals($contact['phones'][0], $contactPhone[0]);
 
     $this->assertEquals($order['lead']['name'], $title);
     $this->assertEquals($order['lead']['price'], $price);
-    $this->assertEquals($payDate, $order['lead']["custom_fields_values"][0]['values'][0]['value']->format('d.m.Y'));
+    $this->assertEquals($payDate, $order['lead']['pay_date']);
 
-    $this->assertEquals("contacts", $order['link'][0]["to_entity_type"]);
-    $this->assertEquals($order['link'][0]["to_entity_id"], $order['contact']['id']);
+    $this->assertEquals("contacts", $order['link']["to_entity_type"]);
+    $this->assertEquals($order['link']["to_entity_id"], $order['contact']['id']);
   }
 
   public function testCreateWithDublicatedPhone(): void
@@ -120,8 +116,8 @@ class IntegrationModuleAmocrmOrderServiceTest extends TestCase
     $contact = $amocrmContactService->create(
       firstName: $contactFirstName,
       lastName: $contactLastName,
-      phone: $contactPhone,
-      email: $contactEmail);
+      phones: $contactPhone,
+      emails: $contactEmail);
 
     $amocrmOrderService = $this->app->make(AmocrmOrderService::class);
 
@@ -140,16 +136,14 @@ class IntegrationModuleAmocrmOrderServiceTest extends TestCase
     $this->assertEquals($contact['first_name'], $contactFirstName);
     $this->assertEquals($contact['last_name'], $contactLastName);
     $this->assertEquals($contact['name'], $contactFirstName . ' ' . $contactLastName);
-    $this->assertEquals($contact["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.contacts.email'));
-    $this->assertContains($contactEmail[0], $contact["custom_fields_values"][0]['values'][0]);
-    $this->assertEquals($contact["custom_fields_values"][1]['field_id'], config('services.amocrm.advance.custom_fields.contacts.phone'));
-    $this->assertContains($contactPhone[0], $contact["custom_fields_values"][1]['values'][0]);
+    $this->assertEquals($contact['emails'][0], $contactEmail[0]);
+    $this->assertEquals($contact['phones'][0], $contactPhone[0]);
 
     $this->assertEquals($order['lead']['name'], $title);
     $this->assertEquals($order['lead']['price'], $price);
-    $this->assertEquals($payDate, $order['lead']["custom_fields_values"][0]['values'][0]['value']->format('d.m.Y'));
+    $this->assertEquals($payDate, $order['lead']['pay_date']);
 
-    $this->assertEquals("contacts", $order['link'][0]["to_entity_type"]);
-    $this->assertEquals($order['link'][0]["to_entity_id"], $order['contact']['id']);
+    $this->assertEquals("contacts", $order['link']["to_entity_type"]);
+    $this->assertEquals($order['link']["to_entity_id"], $order['contact']['id']);
   }
 }

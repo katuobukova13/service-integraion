@@ -22,18 +22,16 @@ class IntegrationModuleAmocrmContactServiceTest extends TestCase
     $contact = $amocrmContactService->create(
       firstName: $contactFirstName,
       lastName: $contactLastName,
-      phone: $contactPhone,
-      email: $contactEmail,
+      phones: $contactPhone,
+      emails: $contactEmail,
     );
 
     $this->assertIsArray($contact);
     $this->assertEquals($contact['first_name'], $contactFirstName);
     $this->assertEquals($contact['last_name'], $contactLastName);
     $this->assertEquals($contact['name'], $contactFirstName . ' ' . $contactLastName);
-    $this->assertEquals($contact["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.contacts.email'));
-    $this->assertContains($contactEmail[0], $contact["custom_fields_values"][0]['values'][0]);
-    $this->assertEquals($contact["custom_fields_values"][1]['field_id'], config('services.amocrm.advance.custom_fields.contacts.phone'));
-    $this->assertContains($contactPhone[0], $contact["custom_fields_values"][1]['values'][0]);
+    $this->assertEquals($contact['emails'][0], $contactEmail[0]);
+    $this->assertEquals($contact['phones'][0], $contactPhone[0]);
   }
 
   public function testFind(): void
@@ -48,8 +46,8 @@ class IntegrationModuleAmocrmContactServiceTest extends TestCase
     $order = $amocrmContactService->create(
       firstName: $contactFirstName,
       lastName: $contactLastName,
-      phone: $contactPhone,
-      email: $contactEmail,
+      phones: $contactPhone,
+      emails: $contactEmail,
     );
 
     $contact = $amocrmContactService->find($order['id']);
@@ -72,8 +70,8 @@ class IntegrationModuleAmocrmContactServiceTest extends TestCase
     $contact = $amocrmContactService->create(
       firstName: $contactFirstName,
       lastName: $contactLastName,
-      phone: $contactPhone,
-      email: $contactEmail,
+      phones: $contactPhone,
+      emails: $contactEmail,
     );
 
     $contactId = $contact['id'];
@@ -81,16 +79,14 @@ class IntegrationModuleAmocrmContactServiceTest extends TestCase
     $contactUpdated = $amocrmContactService->update(
       id: $contactId,
       firstName: $firstNameUpdate,
-      phone: $phonesUpdate
+      phones: $phonesUpdate
     );
 
     $this->assertIsArray($contactUpdated);
     $this->assertEquals($firstNameUpdate, $contactUpdated['first_name']);
-    $this->assertEquals($contactUpdated["custom_fields_values"][0]['field_id'], config('services.amocrm.advance.custom_fields.contacts.email'));
-    $this->assertContains($contactEmail[0], $contactUpdated["custom_fields_values"][0]['values'][0]);
-    $this->assertEquals($contactUpdated["custom_fields_values"][1]['field_id'], config('services.amocrm.advance.custom_fields.contacts.phone'));
-    $this->assertContains($phonesUpdate[0], $contactUpdated["custom_fields_values"][1]['values'][0]);
-    $this->assertContains($contactPhone[0], $contactUpdated["custom_fields_values"][1]['values'][1]);
+    $this->assertEquals($contactUpdated['emails'][0], $contactEmail[0]);
+    $this->assertEquals($contactUpdated['phones'][0], $phonesUpdate[0]);
+    $this->assertEquals($contactPhone[0], $contactUpdated['phones'][1]);
   }
 
   public function testListFilterContacts(): void
@@ -107,24 +103,24 @@ class IntegrationModuleAmocrmContactServiceTest extends TestCase
     $contact1 = $amocrmContactService->create(
       firstName: $firstName,
       lastName: $lastName,
-      phone: $phones1,
-      email: $email1,
+      phones: $phones1,
+      emails: $email1,
     );
 
     $contact2 = $amocrmContactService->create(
       firstName: $firstName,
       lastName: $lastName,
-      phone: $phones2,
-      email: $email2,
+      phones: $phones2,
+      emails: $email2,
     );
 
     $listFilter = $amocrmContactService->list(filter: ['id' => [
       $contact1['id'], $contact2['id']]]);
 
-    $this->assertIsArray($listFilter);
-    $this->assertEquals(2, $listFilter['contacts']->count());
-    $this->assertEquals($listFilter['contacts'][0]->attributes['id'], $contact1['id']);
-    $this->assertEquals($listFilter['contacts'][1]->attributes['id'], $contact2['id']);
+    $this->assertIsArray($listFilter->all());
+    $this->assertCount(2, $listFilter);
+    $this->assertEquals($listFilter[0]->attributes['id'], $contact1['id']);
+    $this->assertEquals($listFilter[1]->attributes['id'], $contact2['id']);
   }
 
   public function testListLimitContacts()
@@ -133,14 +129,14 @@ class IntegrationModuleAmocrmContactServiceTest extends TestCase
 
     $listLimit = $amocrmContactService->list(limit: 5);
 
-    $this->assertIsArray($listLimit);
-    $this->assertEquals(5, $listLimit['contacts']->count());
+    $this->assertIsArray($listLimit->all());
+    $this->assertCount(5, $listLimit->all());
 
     $listPage = $amocrmContactService->list(page: 1);
-    $this->assertIsArray($listPage);
+    $this->assertIsArray($listPage->all());
 
     $listWith = $amocrmContactService->list(with: ['leads']);
-    $this->assertIsArray($listWith);
+    $this->assertIsArray($listWith->all());
   }
 
   public function testListPageContacts()
@@ -148,17 +144,9 @@ class IntegrationModuleAmocrmContactServiceTest extends TestCase
     $amocrmContactService = $this->app->make(AmocrmContactService::class);
 
     $listPage = $amocrmContactService->list(page: 1);
-    $this->assertIsArray($listPage);
+    $this->assertIsArray($listPage->all());
 
     $listWith = $amocrmContactService->list(with: ['leads']);
-    $this->assertIsArray($listWith);
-  }
-
-  public function testListWithContacts()
-  {
-    $amocrmContactService = $this->app->make(AmocrmContactService::class);
-
-    $listWith = $amocrmContactService->list(with: ['leads']);
-    $this->assertIsArray($listWith);
+    $this->assertIsArray($listWith->all());
   }
 }

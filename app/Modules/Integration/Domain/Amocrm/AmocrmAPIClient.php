@@ -2,45 +2,61 @@
 
 namespace App\Modules\Integration\Domain\Amocrm;
 
+use AmoCRM\Client\AmoCRMApiClient as AmocrmAPIClientSDK;
 use AmoCRM\Exceptions\AmoCRMoAuthApiException;
 use Illuminate\Support\Facades\Storage;
 use League\Flysystem\Exception;
 use League\OAuth2\Client\Token\AccessToken;
-use \AmoCRM\Client\AmoCRMApiClient as AmoCRMApiClientSDK;
 
-class AmocrmAPIClient
+final class AmocrmAPIClient
 {
- private static string $tokenDir = "services/amocrm/";
+  private static string $tokenDir = "services/amocrm/";
+
+  public AmocrmAPIClientSDK $client;
 
   /**
    * @throws AmoCRMoAuthApiException
    * @throws Exception
    */
-  public function __construct($subdomain, $clientId, $clientSecret, $authCode, $redirectUri)
+  public function __construct()
   {
-    $this->apiClientSDK = new AmoCRMApiClientSDK($clientId, $clientSecret, $redirectUri);
-    $this->apiClientSDK->setAccountBaseDomain($subdomain . '.amocrm.ru');
-    $OAuthClient = $this->apiClientSDK->getOAuthClient();
+    $subdomain = config('services.amocrm.advance.subdomain');
+    $clientId = config('services.amocrm.advance.client_id');
+    $clientSecret = config('services.amocrm.advance.client_secret');
+    $authCode = config('services.amocrm.advance.auth_code');
+    $redirectUri = config('services.amocrm.advance.redirect_uri');
 
-    $tokenData = $this->getTokenData($this->apiClientSDK->getAccountBaseDomain());
+    $this->client = new AmocrmAPIClientSDK($clientId, $clientSecret, $redirectUri);
+    $this->client->setAccountBaseDomain($subdomain . '.amocrm.ru');
+    $OAuthClient = $this->client->getOAuthClient();
+
+    $tokenData = self::getTokenData($this->client->getAccountBaseDomain());
 
     if (empty($tokenData)) {
       $accessToken = $OAuthClient->getAccessTokenByCode($authCode);
 
-      $this->saveTokenData($accessToken, $this->apiClientSDK->getAccountBaseDomain());
+      self::saveTokenData($accessToken, $this->client->getAccountBaseDomain());
     } else {
       $accessToken = new AccessToken($tokenData);
 
       if ($accessToken->hasExpired()) {
         $accessToken = $OAuthClient->getAccessTokenByRefreshToken($accessToken);
 
-        $this->saveTokenData($accessToken, $this->apiClientSDK->getAccountBaseDomain());
+        self::saveTokenData($accessToken, $this->client->getAccountBaseDomain());
       }
     }
 
-    $this->apiClientSDK->setAccessToken($accessToken);
+    $this->client->setAccessToken($accessToken);
 
     return $this;
+  }
+
+  public static function getTokenData(string $baseDomain)
+  {
+    $tokenPath = self::getTokenPath($baseDomain);
+    $tokenDataString = Storage::exists($tokenPath) ? Storage::get($tokenPath) : '';
+
+    return !empty($tokenDataString) ? json_decode($tokenDataString, true) : [];
   }
 
   private static function getTokenPath(string $domain): string
@@ -51,7 +67,7 @@ class AmocrmAPIClient
   /**
    * @throws Exception
    */
-  private function saveTokenData($accessTokenObject, $baseDomain)
+  private static function saveTokenData($accessTokenObject, $baseDomain): void
   {
     $tokenData = [
       'access_token' => $accessTokenObject->getToken(),
@@ -70,13 +86,5 @@ class AmocrmAPIClient
     } else {
       throw new Exception('Invalid access token ' . var_export($tokenData ?? [], true));
     }
-  }
-
-  public static function getTokenData(string $baseDomain)
-  {
-    $tokenPath = self::getTokenPath($baseDomain);
-    $tokenDataString = Storage::exists($tokenPath) ? Storage::get($tokenPath) : '';
-
-    return !empty($tokenDataString) ? json_decode($tokenDataString, true) : [];
   }
 }

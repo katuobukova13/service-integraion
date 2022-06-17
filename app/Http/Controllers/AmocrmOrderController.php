@@ -6,10 +6,11 @@ use AmoCRM\Exceptions\AmoCRMApiException;
 use AmoCRM\Exceptions\AmoCRMMissedTokenException;
 use AmoCRM\Exceptions\AmoCRMoAuthApiException;
 use AmoCRM\Exceptions\InvalidArgumentException;
-use App\Http\Requests\OrderRequest;
+use App\Http\Requests\Amocrm\Order\OrderStoreRequest;
 use App\Services\Integration\AmocrmOrderService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use JetBrains\PhpStorm\ArrayShape;
 
 class AmocrmOrderController extends Controller
 {
@@ -29,18 +30,19 @@ class AmocrmOrderController extends Controller
    * @throws AmoCRMMissedTokenException
    * @throws AmoCRMoAuthApiException
    */
-  public function store(OrderRequest $request, AmocrmOrderService $orderService)
+  #[ArrayShape(['contact' => "array", 'lead' => "array", 'link' => "array"])]
+  public function store(OrderStoreRequest $request, AmocrmOrderService $orderService): array
   {
     $attributes = $request->validated();
 
     return $orderService->create(
       contactFirstName: $attributes['first_name'],
       contactLastName: $attributes['last_name'],
-      contactPhone: $attributes['phone'],
-      contactEmail: $attributes['email'],
+      contactPhone: $attributes['phones'],
+      contactEmail: $attributes['emails'],
       title: $attributes['title'],
-      price: $attributes['price'],
-      payDate: $attributes['pay_date'],
+      price: $attributes['price'] ?? null,
+      payDate: $attributes['pay_date'] ?? null,
       contactCity: $attributes['city'] ?? null,
       contactCountry: $attributes['country'] ?? null,
       contactPosition: $attributes['position'] ?? null,
@@ -48,8 +50,9 @@ class AmocrmOrderController extends Controller
       groupId: $attributes['group_id'] ?? null,
       responsibleUserId: $attributes['responsible_user_id'] ?? null,
       sourceId: $attributes['source_id'] ?? null,
-      order: $attributes['order'] ?? null,
-      integrator: $attributes['integrator'] ?? null
+      orderId: $attributes['order_id'] ?? null,
+      orderNum: $attributes['order_num'] ?? null,
+      integrator: $attributes['integrator'] ?? ''
     );
   }
 

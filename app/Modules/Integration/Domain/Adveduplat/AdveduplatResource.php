@@ -2,19 +2,18 @@
 
 namespace App\Modules\Integration\Domain\Adveduplat;
 
+use App\Modules\Integration\Core\Concerns\DataType;
 use App\Modules\Integration\Core\Facades\Resource;
 
 class AdveduplatResource extends Resource
 {
-  function __construct()
+  protected function endpoint(): string
   {
-    $this->endpoint = config('services.adveduplat.domain');
+    return config('services.adveduplat.domain');
   }
 
-  public function fetch(string $url, array $options = []): mixed
+  protected function dataType(): DataType
   {
-    $endpoint = $url ? $this->endpoint . '/' . $url : $this->endpoint;
-
-    return parent::fetch($endpoint, $options);
+    return DataType::JSON;
   }
 }

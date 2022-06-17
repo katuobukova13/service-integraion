@@ -2,7 +2,7 @@
 
 namespace App\Modules\Integration\Domain\Amocrm\Lead;
 
-use App\Modules\Integration\Core\Concerns\ResourceDataType;
+use App\Modules\Integration\Core\Concerns\DataType;
 use App\Modules\Integration\Domain\Amocrm\AmocrmResource;
 
 class LeadResource extends AmocrmResource
@@ -12,7 +12,7 @@ class LeadResource extends AmocrmResource
     return self::buildUrl(parent::endpoint(), 'leads');
   }
 
-  function dataType(): ResourceDataType
+  function dataType(): DataType
   {
     return parent::dataType();
   }

@@ -2,44 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\GetcourseUserRequest;
-use App\Modules\Integration\Domain\Getcourse\User\UserModel;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App;
-use Mosquitto\Exception;
+use App\Http\Requests\Getcourse\User\UserStoreRequest;
+use App\Services\Integration\GetcourseUserService;
+use Throwable;
 
 class GetcourseUserController extends Controller
 {
-  public function store(GetcourseUserRequest $request)
+  /**
+   * @throws Throwable
+   */
+  public function store(UserStoreRequest $request, GetcourseUserService $userService): array
   {
-    $validatedRequest = $request->validated();
+    $attributes = $request->validated();
 
-    try {
-      $gcUser = App::make(UserModel::class)->set(array_merge(
-        !empty($validatedRequest['email']) ? ['email' => $validatedRequest['email']] : [],
-        !empty($validatedRequest['phone']) ? ['phone' => $validatedRequest['phone']] : [],
-        !empty($validatedRequest['first_name']) ? ['first_name' => $validatedRequest['first_name']] : [],
-        !empty($validatedRequest['last_name']) ? ['last_name' => $validatedRequest['last_name']] : [],
-      ), [
-        'refresh_if_exists' => 0,
-      ]);
-    } catch (Exception $e) {
-      return response([
-        'error' => true,
-        'message' => $e->getMessage(),
-      ]);
+    $user = $userService->createOrUpdate(
+      email: $attributes['email'],
+      firstName: $attributes['first_name'] ?? null,
+      lastName: $attributes['last_name'] ?? null,
+      city: $attributes['city'] ?? null,
+      country: $attributes['country'] ?? null,
+      phone: $attributes['phone'] ?? null,
+      group: $attributes['group'] ?? []);
+
+    $updatedOrCreatedUserFields = [];
+    foreach ($user as $key => $value) {
+      if ($value !== null && $value !== []) {
+        $updatedOrCreatedUserFields[$key] = $value;
+      }
     }
 
-    $gcUserId = $gcUser['result']['user_id'];
-
-    return response(array_merge(
-      $validatedRequest,
-      [
-        'id' => $gcUserId,
-        'created_at' =>  $gcUser->created_at,
-        'updated_at' =>  $gcUser->updated_at,
-      ]
-    ));
+    return $updatedOrCreatedUserFields;
   }
-
 }

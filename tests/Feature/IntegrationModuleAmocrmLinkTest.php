@@ -9,6 +9,7 @@ use AmoCRM\Exceptions\InvalidArgumentException;
 use App\Modules\Integration\Domain\Amocrm\Contact\ContactModel;
 use App\Modules\Integration\Domain\Amocrm\Lead\LeadModel;
 use App\Modules\Integration\Domain\Amocrm\Link\LinkModel as LinkModel;
+use Exception;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
@@ -21,6 +22,7 @@ class IntegrationModuleAmocrmLinkTest extends TestCase
    * @throws InvalidArgumentException
    * @throws AmoCRMApiException
    * @throws AmoCRMMissedTokenException
+   * @throws Exception
    */
   public function testCreateLinkFromContactsToLeads(): void
   {
@@ -30,7 +32,7 @@ class IntegrationModuleAmocrmLinkTest extends TestCase
     $title = $this->faker->text(15);
     $price = $this->faker->numberBetween(100, 5959);
 
-    $amoContact = ContactModel::create(["first_name" => $firstName, "last_name" => $lastName, "cf_phone" => $phone]);
+    $amoContact = ContactModel::create(["first_name" => $firstName, "last_name" => $lastName, "phones" => $phone]);
     $amoLead = LeadModel::create(["name" => $title, "price" => $price]);
 
     $link = LinkModel::link($amoContact, $amoLead);
@@ -45,6 +47,7 @@ class IntegrationModuleAmocrmLinkTest extends TestCase
    * @throws InvalidArgumentException
    * @throws AmoCRMApiException
    * @throws AmoCRMMissedTokenException
+   * @throws Exception
    */
   public function testCreateLinkFromLeadsToContacts(): void
   {
@@ -54,7 +57,7 @@ class IntegrationModuleAmocrmLinkTest extends TestCase
     $title = $this->faker->text(15);
     $price = $this->faker->numberBetween(100, 5959);
 
-    $amoContact = ContactModel::create(["first_name" => $firstName, "last_name" => $lastName, "cf_phone" => $phone]);
+    $amoContact = ContactModel::create(["first_name" => $firstName, "last_name" => $lastName, "phones" => $phone]);
     $amoLead = LeadModel::create(["name" => $title, "price" => $price]);
 
     $link = LinkModel::link($amoLead, $amoContact);

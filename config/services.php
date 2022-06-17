@@ -42,20 +42,20 @@ return [
       'redirect_uri' => env('AMOCRM_REDIRECT_URI'),
       'custom_fields' => [
         'contacts' => [
-          'position' => 801077, // Должность
-          'phone' => 801079, // Телефон
-          'email' => 801081,
-          'country' => 801363, //Страна
-          'city' => 801365, //Город
-          'partner' => 974515,
-
+          'position' => (int)env('AMOCRM_CUSTOM_FIELDS_CONTACTS_POSITION'), // Должность
+          'phones' => (int)env('AMOCRM_CUSTOM_FIELDS_CONTACTS_PHONES'), // Телефон
+          'emails' => (int)env('AMOCRM_CUSTOM_FIELDS_CONTACTS_EMAILS'),
+          'country' => (int)env('AMOCRM_CUSTOM_FIELDS_CONTACTS_COUNTRY'), //Страна
+          'city' => (int)env('AMOCRM_CUSTOM_FIELDS_CONTACTS_CITY'), //Город
+          'partner' => (int)env('AMOCRM_CUSTOM_FIELDS_CONTACTS_PARTNER'),
         ],
         'leads' => [
-          'pay_date' => 974505, // Дата оплаты
-          'order' => 974463, //номер заказа
-          'partner' => 974513, //партнер
-          'city' => 974503, //Город
-          'integrator' => 974507,
+          'pay_date' => (int)env('AMOCRM_CUSTOM_FIELDS_LEADS_PAY_DATE'), // Дата оплаты
+          'order_id' => (int)env('AMOCRM_CUSTOM_FIELDS_LEADS_GETCOURSE_ORDER_ID'), //id заказа
+          'order_num' => (int)env('AMOCRM_CUSTOM_FIELDS_LEADS_GETCOURSE_ORDER_NUM'), //номер заказа
+          'partner' => (int)env('AMOCRM_CUSTOM_FIELDS_LEADS_PARTNER'), //партнер
+          'city' => (int)env('AMOCRM_CUSTOM_FIELDS_LEADS_CITY'), //Город
+          'integrator' => (int)env('AMOCRM_CUSTOM_FIELDS_LEADS_INTEGRATOR'),
         ]
       ]
     ],

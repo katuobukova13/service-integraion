@@ -2,52 +2,41 @@
 
 namespace App\Modules\Integration\Domain\Adveduplat\User;
 
-use App\Modules\Integration\Core\Facades\ResourceModel as SyncModel;
+use App\Modules\Integration\Core\Concerns\Crud;
+use App\Modules\Integration\Core\Facades\BaseModel;
+use Exception;
 use Illuminate\Support\Facades\App;
 
-class UserModel extends SyncModel
+final class UserModel extends BaseModel implements Crud
 {
-  public static function find(int $id): static
+  public function __construct(public UserResource $resource)
   {
-    $model = App::make(static::class);
+  }
 
-    $response = App::make(UserResource::class)->fetch($id);
+  /**
+   * @throws Exception
+   */
+  public static function find(int $id): self
+  {
+    /**
+     * @var UserModel $model
+     */
+
+    $model = App::make(self::class);
+
+    $response = $model->resource->fetch($id);
 
     $model->setAttributes($response);
 
     return $model;
   }
+
 
   public static function create(array $attributes)
   {
-    $model = App::make(static::class);
-
-    $response = App::make(UserResource::class)->fetch('', options: [
-      'method' => 'POST',
-      'body' => $attributes
-    ]);
-
-    $model->setAttributes($response);
-
-    return $model;
   }
 
-  public function update($attributes)
+  public function update(array $attributes)
   {
-    $model = App::make(static::class);
-
-    $response = App::make(UserResource::class)->fetch($attributes['id'], options: [
-      'method' => 'PUT',
-      'body' => $attributes
-    ]);
-
-    $model->setAttributes($response);
-
-    return $model;
-  }
-
-  public function delete(): void
-  {
-    //пока невозможно
   }
 }
