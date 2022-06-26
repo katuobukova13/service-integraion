@@ -7,12 +7,12 @@ use JetBrains\PhpStorm\ArrayShape;
 final class AmocrmSamplingClause
 {
   public function __construct(
-    public readonly array $with = [],
-    public readonly int $page = 1,
-    public readonly int $limit = 50,
+    public readonly array  $with = [],
+    public readonly int    $page = 1,
+    public readonly int    $limit = 50,
     public readonly string $query = '',
-    public readonly array $filter = [],
-    public readonly array $order = [],
+    public readonly array  $filter = [],
+    public readonly array  $order = [],
   )
   {
   }

@@ -10,8 +10,8 @@ final class SamplingClause
     public readonly array $select = [],
     public readonly array $with = [],
     public readonly array $filters = [],
-    public readonly int $limit = 50,
-    public readonly int $page = 1,
+    public readonly int   $limit = 50,
+    public readonly int   $page = 1,
   )
   {
   }

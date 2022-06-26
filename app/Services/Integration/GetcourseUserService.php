@@ -25,7 +25,7 @@ class GetcourseUserService
     string $city = null,
     string $country = null,
     string $phone = null,
-    array $group = [],
+    array  $group = [],
   ): array
   {
     $contact = UserModel::createOrUpdate([

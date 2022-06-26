@@ -13,7 +13,7 @@ use Mosquitto\Exception;
 class GetcourseUserExportService extends BaseModel
 {
   public function __construct(
-    public GetcourseResource    $resource
+    public GetcourseResource $resource
   )
   {
   }

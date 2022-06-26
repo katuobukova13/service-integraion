@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 abstract class Resource
 {
   abstract protected function endpoint(): string;
+
   abstract protected function dataType(): DataType;
 
   public static function buildUrl($origin, $pathName): string

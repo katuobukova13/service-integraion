@@ -3,15 +3,10 @@
 namespace App\Services\Integration;
 
 use AmoCRM\Exceptions\AmoCRMApiException;
-use AmoCRM\Exceptions\AmoCRMMissedTokenException;
-use AmoCRM\Exceptions\AmoCRMoAuthApiException;
-use AmoCRM\Exceptions\InvalidArgumentException;
 use App\Modules\Integration\Domain\Amocrm\AmocrmSamplingClause;
 use App\Modules\Integration\Domain\Amocrm\Contact\ContactModel as AmocrmContact;
 use App\Modules\Integration\Domain\Amocrm\Lead\LeadModel as AmocrmLead;
 use App\Modules\Integration\Domain\Amocrm\Link\LinkModel;
-use Exception;
-use JetBrains\PhpStorm\ArrayShape;
 
 class AmocrmOrderService
 {

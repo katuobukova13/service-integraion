@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Getcourse\User;
 
 use Illuminate\Foundation\Http\FormRequest;
-use JetBrains\PhpStorm\ArrayShape;
 
 class UserStoreRequest extends FormRequest
 {
