@@ -2,8 +2,9 @@ openapi: 3.0.3
 info:
   title: INTEGRATION SERVICE API
   version: 1.0.0
+servers:
+  - url: ${SWAGGER_SERVER}
 paths:
-
   /api/v1/getcourse/deal:
     post:
       tags:
@@ -154,9 +155,6 @@ paths:
               - MXN
               - JPY
               - UZS
-        - name: token
-          in: query
-          description: токен для авторизации в приложении
       security:
         - api_key: [ ]
       responses:
@@ -170,7 +168,7 @@ paths:
     post:
       tags:
         - Пользователи GetCourse
-      description: Создание сделки GetCourse
+      description: Создание пользователя GetCourse
       parameters:
         - name: email
           in: query
@@ -210,9 +208,6 @@ paths:
             type: array
             items:
               type: string
-        - name: token
-          in: query
-          description: токен для авторизации в приложении
       security:
         - api_key: [ ]
       responses:
@@ -281,9 +276,6 @@ paths:
           description: партнер
           schema:
             type: string
-        - name: token
-          in: query
-          description: токен для авторизации в приложении
       security:
         - api_key: [ ]
       responses:
@@ -371,9 +363,6 @@ paths:
             type: array
             items:
               type: integer
-        - name: token
-          in: query
-          description: токен для авторизации в приложении
       security:
         - api_key: [ ]
       responses:
@@ -392,9 +381,6 @@ paths:
         - name: id
           in: path
           required: true
-        - name: token
-          in: query
-          description: токен для авторизации в приложении
       security:
         - api_key: [ ]
       responses:
@@ -461,9 +447,6 @@ paths:
           description: партнер
           schema:
             type: string
-        - name: token
-          in: query
-          description: токен для авторизации в приложении
       security:
         - api_key: [ ]
       responses:
@@ -525,9 +508,6 @@ paths:
           description: номер заказа Getcourse
           schema:
             type: integer
-        - name: token
-          in: query
-          description: токен для авторизации в приложении
       security:
         - api_key: [ ]
       responses:
@@ -622,9 +602,6 @@ paths:
             type: array
             items:
               type: integer
-        - name: token
-          in: query
-          description: токен для авторизации в приложении
       security:
         - api_key: [ ]
       responses:
@@ -643,9 +620,6 @@ paths:
         - name: id
           in: path
           required: true
-        - name: token
-          in: query
-          description: токен для авторизации в приложении
       security:
         - api_key: [ ]
       responses:
@@ -708,9 +682,6 @@ paths:
           description: id источника
           schema:
             type: integer
-        - name: token
-          in: query
-          description: токен для авторизации в приложении
       security:
         - api_key: [ ]
       responses:
@@ -815,9 +786,6 @@ paths:
           description: id источника
           schema:
             type: integer
-        - name: token
-          in: query
-          description: токен для авторизации в приложении
       security:
         - api_key: [ ]
       responses:

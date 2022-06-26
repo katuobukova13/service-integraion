@@ -30,19 +30,29 @@ final class AmocrmAPIClient
     $this->client->setAccountBaseDomain($subdomain . '.amocrm.ru');
     $OAuthClient = $this->client->getOAuthClient();
 
-    $tokenData = self::getTokenData($this->client->getAccountBaseDomain());
+    $tokenData = self::getTokenData($clientId);
 
     if (empty($tokenData)) {
       $accessToken = $OAuthClient->getAccessTokenByCode($authCode);
 
-      self::saveTokenData($accessToken, $this->client->getAccountBaseDomain());
+      self::saveTokenData($clientId, [
+        'access_token' => $accessToken->getToken(),
+        'refresh_token' => $accessToken->getRefreshToken(),
+        'expires' => $accessToken->getExpires(),
+        'baseDomain' => $this->client->getAccountBaseDomain(),
+      ]);
     } else {
       $accessToken = new AccessToken($tokenData);
 
       if ($accessToken->hasExpired()) {
         $accessToken = $OAuthClient->getAccessTokenByRefreshToken($accessToken);
 
-        self::saveTokenData($accessToken, $this->client->getAccountBaseDomain());
+        self::saveTokenData($clientId, [
+          'access_token' => $accessToken->getToken(),
+          'refresh_token' => $accessToken->getRefreshToken(),
+          'expires' => $accessToken->getExpires(),
+          'baseDomain' => $this->client->getAccountBaseDomain(),
+        ]);
       }
     }
 
@@ -51,38 +61,31 @@ final class AmocrmAPIClient
     return $this;
   }
 
-  public static function getTokenData(string $baseDomain)
+  public static function getTokenData(string $clientId)
   {
-    $tokenPath = self::getTokenPath($baseDomain);
+    $tokenPath = self::getTokenPath($clientId);
     $tokenDataString = Storage::exists($tokenPath) ? Storage::get($tokenPath) : '';
 
     return !empty($tokenDataString) ? json_decode($tokenDataString, true) : [];
   }
 
-  private static function getTokenPath(string $domain): string
+  private static function getTokenPath(string $clientId): string
   {
-    return implode(DIRECTORY_SEPARATOR, [self::$tokenDir, "$domain-token.json"]);
+    return implode(DIRECTORY_SEPARATOR, [self::$tokenDir, "$clientId-token.json"]);
   }
 
   /**
    * @throws Exception
    */
-  private static function saveTokenData($accessTokenObject, $baseDomain): void
+  private static function saveTokenData($clientId, $tokenData): void
   {
-    $tokenData = [
-      'access_token' => $accessTokenObject->getToken(),
-      'refresh_token' => $accessTokenObject->getRefreshToken(),
-      'expires' => $accessTokenObject->getExpires(),
-      'baseDomain' => $baseDomain,
-    ];
-
     if (
       !empty($tokenData['access_token']) &&
       !empty($tokenData['refresh_token']) &&
       !empty($tokenData['expires']) &&
       !empty($tokenData['baseDomain'])
     ) {
-      Storage::put(self::getTokenPath($baseDomain), json_encode($tokenData));
+      Storage::put(self::getTokenPath($clientId), json_encode($tokenData));
     } else {
       throw new Exception('Invalid access token ' . var_export($tokenData ?? [], true));
     }

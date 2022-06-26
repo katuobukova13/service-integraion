@@ -11,6 +11,8 @@ services:
     volumes:
       - .:/var/www/html
       - ./docker/local/php.ini:/usr/local/etc/php/conf.d/php.ini
+    extra_hosts:
+      - sentry.advance.local:${SENTRY_HOST_IP:-127.0.0.1}
 
   db:
     image: 'mysql/mysql-server'
@@ -28,6 +30,8 @@ services:
   swagger:
     build:
       context: .
+      args:
+        SWAGGER_SERVER: ${SWAGGER_SERVER}
       dockerfile: ./docker/local/swagger.Dockerfile
     ports:
       - ${SWAGGER_APP_PORT}:8080

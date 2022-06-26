@@ -35,22 +35,22 @@ final class LeadModel extends BaseModel implements Crud
   )
   {
     if (empty(config('services.amocrm.advance.custom_fields.leads.city')))
-      throw new Exception('Отсутствует id кастомного поля city');
+      throw new Exception('Отсутствует id кастомного поля city в .env');
 
     if (empty(config('services.amocrm.advance.custom_fields.leads.pay_date')))
-      throw new Exception('Отсутствует id кастомного поля pay_date');
+      throw new Exception('Отсутствует id кастомного поля pay_date в .env');
 
     if (empty(config('services.amocrm.advance.custom_fields.leads.order_id')))
-      throw new Exception('Отсутствует id кастомного поля order_id');
+      throw new Exception('Отсутствует id кастомного поля order_id в .env');
 
     if (empty(config('services.amocrm.advance.custom_fields.leads.order_num')))
-      throw new Exception('Отсутствует id кастомного поля order_num');
+      throw new Exception('Отсутствует id кастомного поля order_num в .env');
 
     if (empty(config('services.amocrm.advance.custom_fields.leads.integrator')))
-      throw new Exception('Отсутствует id кастомного поля integrator');
+      throw new Exception('Отсутствует id кастомного поля integrator в .env');
 
     if (empty(config('services.amocrm.advance.custom_fields.leads.partner')))
-      throw new Exception('Отсутствует id кастомного поля partner');
+      throw new Exception('Отсутствует id кастомного поля partner в .env');
   }
 
   /**

@@ -17,7 +17,7 @@ remove:
 	docker run --rm -v ${PWD}:/app -w /app --user $(id -u):$(id -g) composer:2.2.7 remove $(filter-out $@,$(MAKECMDGOALS)) --ignore-platform-req=ext-mosquitto-php
 
 up:
-	docker-compose up -d
+	docker-compose up -d --build
 
 migrate:
 	docker-compose exec app php artisan migrate

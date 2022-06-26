@@ -28,8 +28,8 @@ class AmocrmResource extends Resource
 
   public function fetch(string $url = '', RequestOptions $options = null): mixed
   {
-    $baseDomain = config('services.amocrm.advance.subdomain') . '.' . 'amocrm.ru';
-    $secretKey = AmocrmAPIClient::getTokenData($baseDomain);
+    $clientId = config('services.amocrm.advance.client_id');
+    $secretKey = AmocrmAPIClient::getTokenData($clientId);
 
     return parent::fetch($url, new RequestOptions(
       method: $options->method,
