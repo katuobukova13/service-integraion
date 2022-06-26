@@ -50,7 +50,7 @@ class Test extends Command
     // $data = UserModel::find(243456082);
 
 
-    $data = DealModel::create(['email' => 'teskkik@testik.ru', 'title' => 'testovii']);
+  //  $data = DealModel::create(['email' => 'teskkik@testik.ru', 'title' => 'testovii']);
     dd($data);
 
     return Command::SUCCESS;
